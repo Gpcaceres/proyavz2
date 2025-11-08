@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Conversor de Moneda - Intelligent Travel Planner</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container-fluid">
+      <h1>Conversor de Moneda</h1>
+      <nav>
+        <a href="/">Inicio</a>
+        <a href="/destinations">Destinos</a>
+        <a href="/trips">Viajes</a>
+        <a href="/routes">Rutas</a>
+        <a href="/weather">Clima</a>
+        <a href="/budget">Presupuesto</a>
+        <a href="/itinerary">Itinerario</a>
+        <a href="/currency">Conversor</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container currency-container">
+    <section class="card" id="onlineConverter">
+      <h2 class="text-gradient">Conversor de divisas en línea</h2>
+      <p class="text-secondary">Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.</p>
+
+      <div id="onlineStatus" class="alert alert-error" hidden></div>
+
+      <form id="currencyForm" class="currency-form">
+        <div class="form-group">
+          <label for="fromCurrency">Moneda origen</label>
+          <select id="fromCurrency" name="from" required></select>
+        </div>
+        <div class="form-group">
+          <label for="toCurrency">Moneda destino</label>
+          <select id="toCurrency" name="to" required></select>
+        </div>
+        <div class="form-group">
+          <label for="amount">Monto</label>
+          <input id="amount" name="amount" type="number" min="0" step="0.01" placeholder="Ej: 150.00" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Convertir</button>
+      </form>
+    </section>
+
+    <section id="conversionResult" class="card conversion-result" hidden>
+      <h3>Resultado</h3>
+      <p class="conversion-value" id="convertedAmount"></p>
+      <p id="conversionRate" class="text-secondary"></p>
+      <p id="conversionBaseAmount" class="text-secondary"></p>
+      <small id="conversionUpdatedAt" class="text-muted"></small>
+    </section>
+
+    <section class="card" id="onlineRatesCard">
+      <h3>Tasas disponibles</h3>
+      <p class="text-secondary">Valores obtenidos de <strong id="baseCurrencyLabel">USD</strong>. Última actualización: <span id="ratesUpdatedAt"></span></p>
+      <div class="table-responsive">
+        <table class="table currency-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Moneda</th>
+              <th>Símbolo</th>
+              <th>Tasa vs base</th>
+            </tr>
+          </thead>
+          <tbody id="currencyRates"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="offlineConverter">
+      <h2>Conversor offline</h2>
+      <p class="text-secondary">Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.</p>
+
+      <form id="offlineCurrencyForm" class="currency-form">
+        <div class="form-group">
+          <label for="offlineFromCurrency">Moneda origen</label>
+          <select id="offlineFromCurrency" name="from" required></select>
+        </div>
+        <div class="form-group">
+          <label for="offlineToCurrency">Moneda destino</label>
+          <select id="offlineToCurrency" name="to" required></select>
+        </div>
+        <div class="form-group">
+          <label for="offlineAmount">Monto</label>
+          <input id="offlineAmount" name="amount" type="number" min="0" step="0.01" placeholder="Ej: 150.00" required />
+        </div>
+        <button type="submit" class="btn">Convertir offline</button>
+      </form>
+
+      <section id="offlineConversionResult" class="conversion-result" hidden>
+        <h3>Resultado offline</h3>
+        <p class="conversion-value" id="offlineConvertedAmount"></p>
+        <p id="offlineConversionRate" class="text-secondary"></p>
+        <p id="offlineConversionBaseAmount" class="text-secondary"></p>
+        <small id="offlineConversionUpdatedAt" class="text-muted"></small>
+      </section>
+
+      <h3>Tasas de referencia offline</h3>
+      <p class="text-secondary">Datos con última actualización: <span id="offlineRatesUpdatedAt"></span></p>
+      <div class="table-responsive">
+        <table class="table currency-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Moneda</th>
+              <th>Símbolo</th>
+              <th>Tasa vs base</th>
+            </tr>
+          </thead>
+          <tbody id="offlineRates"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>Conversor de moneda para viajeros - Datos simulados para demostración.</small>
+    </div>
+  </footer>
+
+  <script src="/assets/js/layout.js"></script>
+  <script src="/assets/js/auth-api.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/currency-api.js"></script>
+  <script src="/assets/js/currency.js"></script>
+</body>
+</html>

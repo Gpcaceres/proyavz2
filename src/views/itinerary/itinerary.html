@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Itinerario - Prototipo</title>
+	<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+	<header class="site-header">
+		<h1>Itinerario automático</h1>
+		<nav>
+            <a href="/">Inicio</a>
+            <a href="/destinations">Destinos</a>
+            <a href="/trips">Viajes</a>
+            <a href="/routes">Rutas</a>
+            <a href="/weather">Clima</a>
+            <a href="/budget">Presupuesto</a>
+            <a href="/itinerary">Itinerario</a>
+		</nav>
+	</header>
+
+	<main class="container">
+		<section class="card">
+			<h2>Generar itinerario inteligente</h2>
+			<div class="form-grid">
+				<label>Seleccionar viaje
+					<select id="itTripSelect" name="trip" required></select>
+				</label>
+				<label>Días del viaje
+					<input id="itDays" name="days" type="number" min="1" max="30" value="3" required>
+				</label>
+				<label>Tipo de intereses
+					<select id="itInterests" name="interests">
+						<option value="cultura">Cultura e Historia</option>
+						<option value="naturaleza">Naturaleza y Aventura</option>
+						<option value="gastronomia">Gastronomía</option>
+						<option value="aventura">Deportes y Aventura</option>
+					</select>
+				</label>
+				<label>Estilo de presupuesto
+					<select id="itBudgetStyle" name="budgetStyle">
+						<option value="economico">Económico</option>
+						<option value="medio" selected>Medio</option>
+						<option value="alto">Alto</option>
+					</select>
+				</label>
+			</div>
+			<div class="button-group">
+				<button id="genItBtn" class="primary-btn">🤖 Generar con IA</button>
+				<button id="saveItBtn" class="secondary-btn" style="display:none">💾 Guardar itinerario</button>
+				<button id="exportItBtn" class="secondary-btn" style="display:none">🖨️ Exportar (Imprimir)</button>
+			</div>
+		</section>
+
+		<section class="card">
+			<h2>Itinerario generado</h2>
+			<div id="itineraryView" class="result"></div>
+		</section>
+	</main>
+
+	<footer class="site-footer"><small>Generación inteligente de itinerarios con IA ✨</small></footer>
+	
+	<!-- Google Generative AI SDK -->
+	<script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.1.3/dist/index.min.js"></script>
+	
+	<script src="/assets/js/config.js"></script>
+	<script src="/assets/js/layout.js"></script>
+	<script src="/assets/js/auth-api.js"></script>
+	<script src="/assets/js/main.js"></script>
+	<script src="/assets/js/api-gemini.js"></script>
+ 	<script src="/assets/js/itinerary.js"></script>
+	
+</body>
+</html>
