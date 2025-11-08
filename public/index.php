@@ -21,6 +21,7 @@ require __DIR__ . '/../src/Features/Users/UserRoutes.php';
 require __DIR__ . '/../src/Features/Destinations/DestinationRoutes.php';
 require __DIR__ . '/../src/Features/Trips/TripRoutes.php';
 require __DIR__ . '/../src/Features/Routes/RouteFavoritesRoutes.php';
+require __DIR__ . '/../src/Features/Currency/CurrencyRoutes.php';
 
 // ============ HELPERS ============
 function requireAuth(): void {
@@ -92,6 +93,11 @@ $router->get('/routes', function () {
 $router->get('/weather', function () {
   // Guest allowed: consultar clima simulado para un destino único
   readfile(__DIR__ . '/../src/views/weather/weather.html');
+});
+
+$router->get('/currency', function () {
+  // Guest allowed: consultar tasas en línea mediante Frankfurter
+  readfile(__DIR__ . '/../src/views/currency/currency.html');
 });
 
 $router->get('/itinerary', function () {
