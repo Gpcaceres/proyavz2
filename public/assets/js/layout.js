@@ -12,7 +12,8 @@
       { href: '/routes', label: 'Rutas' },
       { href: '/weather', label: 'Clima' },
       { href: '/budget', label: 'Presupuesto' },
-      { href: '/itinerary', label: 'Itinerario' }
+      { href: '/itinerary', label: 'Itinerario' },
+      { href: '/currency', label: 'Divisas (Frankfurter)' }
     ];
 
     function buildHeader(){
