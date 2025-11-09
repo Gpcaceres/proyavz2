@@ -47,6 +47,19 @@
       <div class="currency-card__header">
         <div class="currency-card__title">
           <h2 class="text-gradient">Conversor de divisas en línea</h2>
+          <p class="text-secondary">
+            Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="mode-toggle"
+          data-mode-toggle
+          aria-pressed="false"
+          aria-label="Cambiar a modo offline"
+        >
+          ON
+        </button>
       </div>
 
       <div id="onlineStatus" class="alert alert-error" hidden></div>
@@ -116,10 +129,25 @@
         </table>
       </div>
     </section>
+
+    <!-- OFFLINE -->
     <section class="card" id="offlineConverter" hidden>
       <div class="currency-card__header">
         <div class="currency-card__title">
           <h2>Conversor offline</h2>
+          <p class="text-secondary">
+            Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="mode-toggle"
+          data-mode-toggle
+          aria-pressed="true"
+          aria-label="Cambiar a modo en línea"
+        >
+          OF
+        </button>
       </div>
 
       <form id="offlineCurrencyForm" class="currency-form" autocomplete="off" novalidate>
