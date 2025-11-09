@@ -47,7 +47,7 @@
     const offlineRatesUpdatedAt = document.getElementById('offlineRatesUpdatedAt');
     const offlineRatesTableBody = document.getElementById('offlineRates');
 
-    // ---- Tarjetas opcionales (fluctuación y serie histórica) ----
+    // ---- Tarjetas opcionales ----
     const fluctuationCard = document.getElementById('fluctuationCard');
     const fluctuationStatus = document.getElementById('fluctuationStatus');
     const fluctuationRangeLabel = document.getElementById('fluctuationRange');
@@ -60,6 +60,14 @@
     const timeseriesTableBody = document.getElementById('timeseriesTable');
     const timeseriesDeltaValue = document.getElementById('timeseriesDelta');
     const timeseriesPercentValue = document.getElementById('timeseriesPercent');
+
+    // ---- Tarjeta Live (opcional: preséntala en el HTML si la quieres) ----
+    const liveRateCard = document.getElementById('liveRateCard');
+    const liveRateStatus = document.getElementById('liveRateStatus');
+    const liveRateValue = document.getElementById('liveRateValue');
+    const liveRateDelta = document.getElementById('liveRateDelta');
+    const liveRateUpdatedAt = document.getElementById('liveRateUpdatedAt');
+    const liveRateBody = liveRateCard?.querySelector('.live-rate-body');
 
     if (!form || !fromSelect || !toSelect) return;
 
@@ -105,7 +113,12 @@
     const FLUCTUATION_SYMBOLS = ['EUR', 'GBP', 'MXN', 'COP'];
     const TIMESERIES_TARGET = 'EUR';
 
-    // Fallbacks para módulos opcionales (si las APIs fallan)
+    // Live rate (opcional)
+    const LIVE_RATE_BASE = 'USD';
+    const LIVE_RATE_TARGET = 'EUR';
+    const LIVE_RATE_INTERVAL_MS = 60_000;
+
+    // Fallbacks
     const FLUCTUATION_FALLBACK = {
       start_date: '2024-05-01',
       end_date: '2024-05-08',
@@ -131,8 +144,17 @@
         '2024-05-08': { [TIMESERIES_TARGET]: 0.9276 },
       },
     };
+    const LIVE_RATE_FALLBACK = {
+      rate: 0.9276,
+      previousRate: 0.9258,
+      updatedAt: '2024-05-08T12:00:00Z'
+    };
+
     let usedFluctuationFallback = false;
     let usedTimeseriesFallback = false;
+    let usedLiveRateFallback = false;
+    let liveRateIntervalId = null;
+    let previousLiveRate = null;
 
     // ---- Utilidades ----
     function formatDateISO(date) {
@@ -142,9 +164,7 @@
       return `${y}-${m}-${d}`;
     }
     function formatDateDisplay(date) {
-      return date.toLocaleDateString('es-EC', {
-        day: '2-digit', month: 'short', year: 'numeric'
-      });
+      return date.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
     }
     function updateStatus(element, message, type = 'info') {
       if (!element) return;
@@ -158,12 +178,7 @@
       element.textContent = message;
       element.hidden = false;
     }
-    function syncModeToggleSlot() {
-      if (!modeToggleContainer) return;
-      const targetSlot = isOfflineMode ? offlineModeSlot : onlineModeSlot;
-      if (!targetSlot || targetSlot.contains(modeToggleContainer)) return;
-      try { targetSlot.appendChild(modeToggleContainer); } catch {}
-    }
+
     function saveMode() {
       try { localStorage.setItem(STORAGE.MODE, isOfflineMode ? 'offline' : 'online'); } catch {}
     }
@@ -199,41 +214,23 @@
         if (sTo && offlineRatesMap.has(sTo)) offlineToSelect.value = sTo;
       } catch {}
     }
-    function getOfflineCurrencyInfo(code) {
-      const normalizedCode = String(code || '').toUpperCase();
-      return OFFLINE_DATA.currencies.find(c => String(c.code).toUpperCase() === normalizedCode);
-    }
-    function createOption(currency) {
-      const code = String(currency.code).toUpperCase();
-      const name = currency.name || code;
-      const symbol = currency.symbol ? String(currency.symbol) : '';
-      const option = document.createElement('option');
-      option.value = code;
-      option.textContent = symbol ? `${code} — ${name} (${symbol})` : `${code} — ${name}`;
-      return option;
-    }
-    function setOnlineFormDisabled(disabled) {
-      const elements = form.querySelectorAll('input, select, button');
-      elements.forEach((el) => { el.disabled = disabled; });
-    }
-    function showOnlineStatus(message) {
-      if (!onlineStatus) return;
-      if (message) {
-        onlineStatus.textContent = message;
-        onlineStatus.hidden = false;
-      } else {
-        onlineStatus.textContent = '';
-        onlineStatus.hidden = true;
-      }
+
+    function syncModeToggleSlot() {
+      if (!modeToggleContainer) return;
+      const targetSlot = isOfflineMode ? offlineModeSlot : onlineModeSlot;
+      if (!targetSlot || targetSlot.contains(modeToggleContainer)) return;
+      try { targetSlot.appendChild(modeToggleContainer); } catch {}
     }
 
     // ---- Modo Online/Offline ----
     function setConverterMode(offline) {
-      isOfflineMode = Boolean(offline);
+      const shouldGoOffline = Boolean(offline);
+      isOfflineMode = shouldGoOffline;
 
       if (currencyContainer) {
         currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
       }
+
       // Online
       if (onlineConverterSection) onlineConverterSection.hidden = isOfflineMode;
       if (onlineRatesCard) onlineRatesCard.hidden = isOfflineMode;
@@ -242,7 +239,7 @@
       if (offlineSection) offlineSection.hidden = !isOfflineMode;
       if (offlineRatesCard) offlineRatesCard.hidden = !isOfflineMode;
 
-      // Recordar visibilidad de resultados
+      // Resultados
       if (resultSection) {
         if (isOfflineMode) {
           onlineResultWasHidden = resultSection.hidden;
@@ -271,9 +268,22 @@
         );
       }
 
-      // Tarjetas opcionales (solo online)
+      // Tarjetas opcionales
       if (fluctuationCard) fluctuationCard.hidden = isOfflineMode;
       if (timeseriesCard) timeseriesCard.hidden = isOfflineMode;
+
+      // Live card (si existe)
+      if (liveRateCard) {
+        liveRateCard.hidden = isOfflineMode;
+        if (isOfflineMode) {
+          stopLiveRateUpdates();
+          if (liveRateBody) liveRateBody.hidden = true;
+          updateStatus(liveRateStatus, 'Disponible únicamente en modo en línea.', 'info');
+        } else {
+          updateStatus(liveRateStatus, '', 'info');
+          startLiveRateUpdates();
+        }
+      }
 
       syncModeToggleSlot();
       saveMode();
@@ -398,6 +408,21 @@
       }
     }
 
+    function setOnlineFormDisabled(disabled) {
+      const elements = form.querySelectorAll('input, select, button');
+      elements.forEach((el) => { el.disabled = disabled; });
+    }
+    function showOnlineStatus(message) {
+      if (!onlineStatus) return;
+      if (message) {
+        onlineStatus.textContent = message;
+        onlineStatus.hidden = false;
+      } else {
+        onlineStatus.textContent = '';
+        onlineStatus.hidden = true;
+      }
+    }
+
     // ---- Convertir (online) ----
     async function convertCurrency(event) {
       event.preventDefault();
@@ -491,6 +516,19 @@
     }
 
     // ---- Poblar Offline ----
+    function createOption(currency) {
+      const code = String(currency.code).toUpperCase();
+      const name = currency.name || code;
+      const symbol = currency.symbol ? String(currency.symbol) : '';
+      const option = document.createElement('option');
+      option.value = code;
+      option.textContent = symbol ? `${code} — ${name} (${symbol})` : `${code} — ${name}`;
+      return option;
+    }
+    function getOfflineCurrencyInfo(code) {
+      const normalizedCode = String(code || '').toUpperCase();
+      return OFFLINE_DATA.currencies.find(c => String(c.code).toUpperCase() === normalizedCode);
+    }
     function populateOfflineData() {
       if (!offlineSection || !offlineForm || !offlineFromSelect || !offlineToSelect || !offlineRatesTableBody) return;
 
@@ -666,9 +704,7 @@
         fluctuationTableBody.appendChild(row);
       });
 
-      if (fluctuationTableWrapper) {
-        fluctuationTableWrapper.hidden = false;
-      }
+      if (fluctuationTableWrapper) fluctuationTableWrapper.hidden = false;
 
       const fallbackMessage = isFallback
         ? 'Mostrando variaciones con datos de referencia locales.'
@@ -805,6 +841,83 @@
       }
     }
 
+    // ---- Live Rate (opcional) ----
+    function renderLiveRateData(payload, { isFallback = false } = {}) {
+      if (!liveRateCard || !liveRateBody || !liveRateValue || !liveRateDelta || !liveRateUpdatedAt) {
+        return;
+      }
+      const rate = Number(payload?.rate);
+      if (!Number.isFinite(rate)) {
+        liveRateBody.hidden = true;
+        updateStatus(liveRateStatus, 'No se pudo calcular la tasa en tiempo real.', 'error');
+        return;
+      }
+      const providedPrevious = Number(payload?.previousRate);
+      const referenceRate = Number.isFinite(providedPrevious) ? providedPrevious : previousLiveRate;
+
+      liveRateValue.textContent = rate.toFixed(4);
+
+      if (payload?.updatedAt) {
+        const updated = new Date(payload.updatedAt);
+        liveRateUpdatedAt.textContent = isNaN(updated.getTime())
+          ? payload.updatedAt
+          : updated.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+      } else {
+        liveRateUpdatedAt.textContent = 'En espera';
+      }
+
+      if (Number.isFinite(referenceRate) && referenceRate !== 0) {
+        const delta = rate - referenceRate;
+        const percent = (delta / referenceRate) * 100;
+        const formattedDelta = `${delta >= 0 ? '+' : ''}${delta.toFixed(4)}`;
+        const formattedPercent = `${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
+        liveRateDelta.textContent = `${formattedDelta} (${formattedPercent})`;
+        liveRateDelta.dataset.trend = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+      } else {
+        liveRateDelta.textContent = 'Esperando referencia previa...';
+        liveRateDelta.dataset.trend = 'flat';
+      }
+
+      previousLiveRate = rate;
+      liveRateBody.hidden = false;
+      usedLiveRateFallback = isFallback;
+      updateStatus(liveRateStatus, isFallback ? 'Mostrando tasa estimada con datos de referencia.' : '', 'info');
+    }
+    async function loadLiveRateData() {
+      if (!liveRateCard || !liveRateValue) return;
+
+      updateStatus(liveRateStatus, 'Actualizando tasa en vivo...', 'info');
+      const url = `https://api.exchangerate.host/latest?base=${LIVE_RATE_BASE}&symbols=${LIVE_RATE_TARGET}`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('No se pudo obtener la tasa en vivo.');
+        const data = await response.json();
+        const rate = data?.rates?.[LIVE_RATE_TARGET];
+        if (!Number.isFinite(rate)) throw new Error('Respuesta inesperada del monitor en vivo.');
+        renderLiveRateData({
+          rate,
+          previousRate: previousLiveRate,
+          updatedAt: data?.date || data?.time_last_update_utc || new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error actualizando tasa en vivo', error);
+        usedLiveRateFallback = true;
+        renderLiveRateData(LIVE_RATE_FALLBACK, { isFallback: true });
+      }
+    }
+    function startLiveRateUpdates() {
+      if (!liveRateCard || liveRateIntervalId) return;
+      loadLiveRateData();
+      liveRateIntervalId = setInterval(loadLiveRateData, LIVE_RATE_INTERVAL_MS);
+    }
+    function stopLiveRateUpdates() {
+      if (liveRateIntervalId) {
+        clearInterval(liveRateIntervalId);
+        liveRateIntervalId = null;
+      }
+    }
+
     // ---- Listeners ----
     if (modeToggleButton) {
       modeToggleButton.addEventListener('click', () => {
@@ -820,16 +933,14 @@
     // ---- Estado inicial ----
     syncModeToggleSlot();
     const initialOffline = loadSavedMode();
+    populateOfflineData();
+    loadRates();
+    loadFluctuationData();
+    loadTimeseriesData();
     setConverterMode(initialOffline);
 
     // ---- Formularios ----
     form.addEventListener('submit', convertCurrency);
     if (offlineForm) offlineForm.addEventListener('submit', handleOfflineConversion);
-
-    // ---- Datos iniciales ----
-    populateOfflineData();
-    loadRates();
-    loadFluctuationData();
-    loadTimeseriesData();
   });
 })();

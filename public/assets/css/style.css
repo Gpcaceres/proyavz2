@@ -59,7 +59,7 @@
   --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Reset y estilos base mejorados */
+/* Reset y estilos base */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; height: 100%; }
 
@@ -73,7 +73,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Fondo animado para la aplicación de viajes */
+/* Fondo animado */
 body::before {
   content: '';
   position: fixed; inset: 0;
@@ -96,7 +96,7 @@ body::after {
   66% { transform: translateY(10px) rotate(240deg); }
 }
 
-/* Header moderno estilo aplicación de viajes */
+/* Header */
 .site-header {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   backdrop-filter: blur(20px);
@@ -116,7 +116,7 @@ body::after {
 .site-header h1::before { content: '✈️'; font-size: 1.5rem; animation: bounce 2s infinite; }
 @keyframes bounce { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
 
-/* Navegación moderna */
+/* Navegación */
 nav {
   display: flex; align-items: center; gap: var(--spacing-xs);
   margin-top: var(--spacing-md); flex-wrap: wrap;
@@ -147,7 +147,7 @@ nav a:hover {
 nav a:hover::before { left: 100%; }
 nav a:active { transform: translateY(0); }
 
-/* Iconos para navegación */
+/* Iconos nav */
 nav a[href*="destinations"]:before { content: '🏝️ '; }
 nav a[href*="trips"]:before { content: '🎒 '; }
 nav a[href*="route"]:before { content: '🗺️ '; }
@@ -155,7 +155,7 @@ nav a[href*="weather"]:before { content: '🌤️ '; }
 nav a[href*="budget"]:before { content: '💰 '; }
 nav a[href*="itinerary"]:before { content: '📋 '; }
 
-/* Contenedor principal mejorado */
+/* Contenedor principal */
 .container, main.container {
   max-width: 1200px;
   margin: var(--spacing-2xl) auto;
@@ -163,7 +163,7 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
   position: relative;
 }
 
-/* Hero section */
+/* Hero */
 .hero-section {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   border-radius: var(--radius-xl);
@@ -183,7 +183,7 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
 .hero-section h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: var(--spacing-md); text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .hero-section p { font-size: 1.1rem; margin-bottom: var(--spacing-lg); opacity: 0.95; }
 
-/* Tarjetas modernas estilo glassmorphism */
+/* Tarjetas */
 .card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
@@ -208,17 +208,17 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
   background: rgba(255, 255, 255, 0.98);
 }
 
-/* ====== Currency: visibilidad por modo ====== */
+/* ===== Currency: visibilidad por modo ===== */
 .currency-container[data-mode="offline"] #onlineConverter,
 .currency-container[data-mode="offline"] #onlineRatesCard { display: none; }
 
 .currency-container[data-mode="online"] #offlineConverter,
 .currency-container[data-mode="online"] #offlineRatesCard { display: none; }
 
-/* Ocultar elementos sólo-online cuando esté en modo offline */
+/* Solo-online oculto en offline */
 .currency-container[data-mode="offline"] [data-online-only] { display: none; }
 
-/* ====== Currency: layout y controles ====== */
+/* ===== Currency: layout y controles ===== */
 .currency-card__header {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: var(--spacing-lg); margin-bottom: var(--spacing-lg);
@@ -234,13 +234,13 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
 
 .currency-form { display: grid; gap: var(--spacing-md); }
 
-/* Columna del modo dentro del form (slot) */
+/* Slot del botón de modo dentro del form */
 .currency-form .form-row--mode {
   display: flex;
   justify-content: flex-end;
 }
 
-/* Botón modo (reutilizable) */
+/* Botón modo */
 .mode-toggle {
   appearance: none;
   border: 1px solid rgba(15, 23, 42, 0.12);
@@ -261,7 +261,7 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
 .mode-toggle:focus-visible { outline: 3px solid rgba(255, 255, 255, 0.65); outline-offset: 3px; }
 .mode-toggle.is-offline { background: linear-gradient(135deg, var(--accent-dark), var(--primary-dark)); }
 
-/* Barra flotante superior del conversor */
+/* Barra flotante superior */
 .currency-mode-toggle {
   position: absolute; top: var(--spacing-xl); right: var(--spacing-xl); z-index: 5;
   display: flex; align-items: center; gap: var(--spacing-sm);
@@ -310,14 +310,14 @@ button:hover, .btn:hover {
 button:hover::before, .btn:hover::before { left: 100%; }
 button:active, .btn:active { transform: translateY(-1px); box-shadow: var(--shadow); }
 
-/* Variantes de botones */
+/* Variantes */
 .btn-secondary { background: linear-gradient(135deg, var(--secondary) 0%, #ff8e8e 100%); }
 .btn-success { background: linear-gradient(135deg, var(--success) 0%, #7ee69f 100%); }
 .btn-warning { background: linear-gradient(135deg, var(--warning) 0%, #ffec8b 100%); color: var(--text-primary); }
 .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
 .btn-outline:hover { background: var(--primary); color: white; }
 
-/* Listas modernas */
+/* Listas */
 .list {
   list-style: none; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
   border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow);
@@ -339,7 +339,7 @@ button:active, .btn:active { transform: translateY(-1px); box-shadow: var(--shad
 .list li:hover::before { transform: scaleY(1); }
 .list li:last-child { border-bottom: none; }
 
-/* Lista de características */
+/* Features */
 .feature-list {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: var(--spacing-lg); margin: var(--spacing-2xl) 0;
@@ -378,7 +378,7 @@ button:active, .btn:active { transform: translateY(-1px); box-shadow: var(--shad
 }
 .btn-link:hover { background: rgba(255, 255, 255, 0.15); color: white; text-decoration: none; }
 
-/* Footer moderno */
+/* Footer */
 .site-footer {
   background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -396,17 +396,14 @@ button:active, .btn:active { transform: translateY(-1px); box-shadow: var(--shad
 input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 1; }
 select { color: var(--text-primary); }
 
-/* Alertas rápidas (para #onlineStatus) */
+/* Alertas rápidas */
 .alert { padding: .75rem 1rem; border-radius: .5rem; margin-bottom: 1rem; }
 .alert-error, .alert-danger { background: #ffe5e5; color: #b42318; border: 1px solid #f1a6a6; }
 .alert-success { background: #e9f9ef; color: #0f5132; border: 1px solid #b7ebc6; }
 
-/* Elementos de series temporales y resumen (opcional para módulo de cambios) */
+/* Elementos de series temporales */
 .card-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: var(--spacing-md);
+  display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: var(--spacing-md);
 }
 .card-header h3 { margin: 0; }
 .card-header p { margin: 0; }
@@ -429,6 +426,31 @@ select { color: var(--text-primary); }
 .timeseries-summary h4 { margin-top: 0; margin-bottom: var(--spacing-sm); }
 .timeseries-delta { margin: 0 0 var(--spacing-sm) 0; font-weight: 600; }
 .timeseries-delta:last-of-type { margin-bottom: 0; }
+
+/* Opcionales: analytics y live rate */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+  align-items: stretch;
+}
+.card--compact, .card--medium, .card--wide { width: 100%; }
+.card--compact { max-width: 340px; justify-self: start; }
+.card--medium { max-width: 520px; }
+.card--wide { grid-column: span 2; max-width: 720px; }
+@media (max-width: 992px) {
+  .card--wide { grid-column: span 1; max-width: none; }
+}
+.live-rate-body { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.live-rate-value { margin: 0; font-size: 2.35rem; font-weight: 700; letter-spacing: 0.05em; }
+.live-rate-delta { margin: 0; font-weight: 600; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 0.35rem; }
+.live-rate-delta::before { content: '⟲'; font-size: 0.95rem; opacity: 0.65; }
+.live-rate-delta[data-trend="up"] { color: var(--success); }
+.live-rate-delta[data-trend="up"]::before { content: '▲'; opacity: 1; }
+.live-rate-delta[data-trend="down"] { color: var(--danger); }
+.live-rate-delta[data-trend="down"]::before { content: '▼'; opacity: 1; }
+.live-rate-delta[data-trend="flat"]::before { content: '⟲'; }
 
 /* Media Queries */
 @media (max-width: 992px) {
@@ -460,26 +482,6 @@ select { color: var(--text-primary); }
   }
 }
 
-@media (min-width: 768px) {
-  .site-header .container-fluid { display: flex; align-items: center; justify-content: space-between; }
-  nav { margin-top: 0; }
-  .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-lg); }
-  .hero-section h2 { font-size: 3rem; }
-}
-
-@media (min-width: 1024px) {
-  .container, main.container { padding: 0 var(--spacing-2xl); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: var(--spacing-xl); }
-  .card { padding: var(--spacing-2xl); }
-  .feature-list { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (min-width: 1200px) {
-  .hero-section { padding: var(--spacing-2xl); }
-  .feature-list { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-}
-
-/* Animaciones utilitarias */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(.95) } to { opacity: 1; transform: translateY(0) scale(1) } }
 @keyframes slideInLeft { from { opacity: 0; transform: translateX(-50px) } to { opacity: 1; transform: translateX(0) } }
 @keyframes slideInRight { from { opacity: 0; transform: translateX(50px) } to { opacity: 1; transform: translateX(0) } }
@@ -495,7 +497,7 @@ select { color: var(--text-primary); }
   background-size: 400% 100%; animation: shimmer 1.5s infinite;
 }
 
-/* Itinerarios con IA / Plan de viaje */
+/* Itinerarios / Plan */
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-lg); }
 .button-group { display: flex; gap: var(--spacing-md); flex-wrap: wrap; align-items: center; }
 .primary-btn {
