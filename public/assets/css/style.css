@@ -164,6 +164,26 @@ nav a[href*="itinerary"]::before{content:'📋 '}
 .dashboard-column--primary .card,.dashboard-column--insights .card{margin-bottom:0}
 .dashboard-column--insights{position:sticky;top:var(--spacing-xl);z-index:2}
 
+.currency-grid{display:grid;gap:var(--spacing-xl);align-items:start;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"converter result monitor" "rates outlook monitor" "fluctuation timeseries momentum"}
+.currency-grid__converter{grid-area:converter;display:grid;gap:var(--spacing-xl)}
+.currency-grid__rates{grid-area:rates;display:grid;gap:var(--spacing-xl)}
+.currency-grid #conversionResult{grid-area:result}
+.currency-grid #liveRateCard{grid-area:monitor}
+.currency-grid #outlookCard{grid-area:outlook}
+.currency-grid #momentumCard{grid-area:momentum}
+.currency-grid #fluctuationCard{grid-area:fluctuation;max-width:100%}
+.currency-grid #timeseriesCard{grid-area:timeseries;max-width:100%;grid-column:auto}
+.currency-grid #onlineRatesCard,.currency-grid #offlineRatesCard{max-width:100%}
+
+@media (max-width:1100px){
+  .currency-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"converter converter" "result monitor" "rates monitor" "outlook momentum" "fluctuation timeseries"}
+  .currency-grid #liveRateCard{align-self:stretch}
+}
+
+@media (max-width:768px){
+  .currency-grid{grid-template-columns:1fr;grid-template-areas:"converter" "result" "monitor" "rates" "outlook" "momentum" "fluctuation" "timeseries"}
+}
+
 /* Analíticas */
 .analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--spacing-lg);margin-top:var(--spacing-xl);align-items:stretch}
 .card--monitor{background:linear-gradient(180deg,rgba(78,205,196,.12),rgba(255,255,255,.92))}
