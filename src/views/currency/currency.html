@@ -24,7 +24,7 @@
   </header>
 
   <main class="container currency-container" data-mode="online">
-    <!-- ÚNICO botón ON/OF (se reubica dinámicamente en los slots) -->
+    <!-- ÚNICO botón ON/OF (se reubica dinámicamente a los slots) -->
     <div class="currency-mode-toggle" id="converterMode">
       <button
         type="button"
@@ -104,6 +104,62 @@
           </thead>
           <tbody id="currencyRates"></tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- ONLINE: Variación semanal (Exchangerate.host) -->
+    <section class="card" id="fluctuationCard" data-online-only>
+      <div class="card-header">
+        <h3>Variación semanal destacada</h3>
+        <p class="text-secondary">
+          Datos desde <span id="fluctuationRange"></span> basados en <strong>exchangerate.host</strong>.
+        </p>
+      </div>
+      <div id="fluctuationStatus" class="alert" role="status" hidden></div>
+      <div class="table-responsive" hidden>
+        <table class="table currency-table">
+          <thead>
+            <tr>
+              <th>Moneda</th>
+              <th>Cambio absoluto</th>
+              <th>Variación %</th>
+            </tr>
+          </thead>
+          <tbody id="fluctuationTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ONLINE: Serie histórica (Frankfurter) -->
+    <section class="card" id="timeseriesCard" data-online-only>
+      <div class="card-header">
+        <h3>Serie diaria Frankfurter</h3>
+        <p class="text-secondary">
+          Últimos valores publicados por el BCE vía Frankfurter. Incluye variación acumulada.
+        </p>
+      </div>
+      <div id="timeseriesStatus" class="alert" role="status" hidden></div>
+      <div class="timeseries-grid" hidden>
+        <section class="timeseries-summary">
+          <h4>Resumen USD → EUR</h4>
+          <p class="timeseries-delta">
+            Cambio absoluto: <span id="timeseriesDelta"></span>
+          </p>
+          <p class="timeseries-delta">
+            Variación porcentual: <span id="timeseriesPercent"></span>
+          </p>
+        </section>
+        <div class="table-responsive">
+          <table class="table currency-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tasa</th>
+              </tr>
+            </thead>
+            <tbody id="timeseriesTable"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 

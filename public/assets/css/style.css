@@ -215,6 +215,9 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
 .currency-container[data-mode="online"] #offlineConverter,
 .currency-container[data-mode="online"] #offlineRatesCard { display: none; }
 
+/* Ocultar elementos sólo-online cuando esté en modo offline */
+.currency-container[data-mode="offline"] [data-online-only] { display: none; }
+
 /* ====== Currency: layout y controles ====== */
 .currency-card__header {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -230,6 +233,12 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
 }
 
 .currency-form { display: grid; gap: var(--spacing-md); }
+
+/* Columna del modo dentro del form (slot) */
+.currency-form .form-row--mode {
+  display: flex;
+  justify-content: flex-end;
+}
 
 /* Botón modo (reutilizable) */
 .mode-toggle {
@@ -392,7 +401,48 @@ select { color: var(--text-primary); }
 .alert-error, .alert-danger { background: #ffe5e5; color: #b42318; border: 1px solid #f1a6a6; }
 .alert-success { background: #e9f9ef; color: #0f5132; border: 1px solid #b7ebc6; }
 
+/* Elementos de series temporales y resumen (opcional para módulo de cambios) */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: var(--spacing-md);
+}
+.card-header h3 { margin: 0; }
+.card-header p { margin: 0; }
+
+#fluctuationStatus,
+#timeseriesStatus {
+  margin-bottom: var(--spacing-md);
+}
+
+.timeseries-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: var(--spacing-lg);
+}
+.timeseries-summary {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.timeseries-summary h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+}
+.timeseries-delta {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-weight: 600;
+}
+.timeseries-delta:last-of-type { margin-bottom: 0; }
+
 /* Media Queries */
+@media (max-width: 992px) {
+  .timeseries-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 768px) {
   .site-header .container-fluid { padding: 0 var(--spacing-md); }
   .site-header h1 { font-size: 1.5rem; margin-bottom: var(--spacing-sm); }
