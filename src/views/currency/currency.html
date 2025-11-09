@@ -37,8 +37,8 @@
       </button>
     </div>
 
-    <div class="currency-dashboard">
-      <div class="dashboard-column dashboard-column--primary">
+    <div class="currency-grid">
+      <div class="currency-grid__converter">
         <!-- ONLINE: Conversión -->
         <section class="card" id="onlineConverter">
           <div class="currency-card__header">
@@ -126,74 +126,93 @@
         </section>
       </div>
 
-      <aside class="dashboard-column dashboard-column--insights" aria-label="Resultados y pronóstico">
-        <section id="conversionResult" class="card conversion-result" hidden>
-          <h3>Resultado</h3>
-          <p class="conversion-value" id="convertedAmount"></p>
-          <p id="conversionRate" class="text-secondary"></p>
-          <p id="conversionBaseAmount" class="text-secondary"></p>
-          <small id="conversionUpdatedAt" class="text-muted"></small>
+      <section id="conversionResult" class="card conversion-result" hidden>
+        <h3>Resultado</h3>
+        <p class="conversion-value" id="convertedAmount"></p>
+        <p id="conversionRate" class="text-secondary"></p>
+        <p id="conversionBaseAmount" class="text-secondary"></p>
+        <small id="conversionUpdatedAt" class="text-muted"></small>
+      </section>
+
+      <!-- ONLINE: Monitor en tiempo real -->
+      <section class="card card--monitor" id="liveRateCard" data-online-only>
+        <div class="card-header">
+          <h3>Monitor USD → EUR</h3>
+          <p class="text-secondary">Actualización automática cada minuto con variación estimada.</p>
+        </div>
+        <div id="liveRateStatus" class="alert" role="status" hidden></div>
+        <div class="live-rate-body" hidden>
+          <p class="live-rate-value"><span id="liveRateValue">--</span></p>
+          <p class="live-rate-delta" id="liveRateDelta" data-trend="flat">Esperando referencia previa...</p>
+          <small class="text-muted">Actualizado: <span id="liveRateUpdatedAt">--</span></small>
+        </div>
+      </section>
+
+      <div class="currency-grid__rates">
+        <!-- ONLINE: Tasas -->
+        <section class="card" id="onlineRatesCard">
+          <h3>Tasas disponibles</h3>
+          <p class="text-secondary">
+            Valores obtenidos de <strong id="baseCurrencyLabel">USD</strong>.
+            Última actualización: <span id="ratesUpdatedAt"></span>
+          </p>
+          <div class="table-responsive">
+            <table class="table currency-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Moneda</th>
+                  <th>Símbolo</th>
+                  <th>Tasa vs base</th>
+                </tr>
+              </thead>
+              <tbody id="currencyRates"></tbody>
+            </table>
+          </div>
         </section>
 
-        <!-- ONLINE: Monitor en tiempo real -->
-        <section class="card card--monitor" id="liveRateCard" data-online-only>
-          <div class="card-header">
-            <h3>Monitor USD → EUR</h3>
-            <p class="text-secondary">Actualización automática cada minuto con variación estimada.</p>
-          </div>
-          <div id="liveRateStatus" class="alert" role="status" hidden></div>
-          <div class="live-rate-body" hidden>
-            <p class="live-rate-value"><span id="liveRateValue">--</span></p>
-            <p class="live-rate-delta" id="liveRateDelta" data-trend="flat">Esperando referencia previa...</p>
-            <small class="text-muted">Actualizado: <span id="liveRateUpdatedAt">--</span></small>
+        <!-- OFFLINE: Tasas -->
+        <section class="card" id="offlineRatesCard" hidden>
+          <h3>Tasas de referencia offline</h3>
+          <p class="text-secondary">
+            Datos con última actualización: <span id="offlineRatesUpdatedAt"></span>
+          </p>
+          <div class="table-responsive">
+            <table class="table currency-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Moneda</th>
+                  <th>Símbolo</th>
+                  <th>Tasa vs base</th>
+                </tr>
+              </thead>
+              <tbody id="offlineRates"></tbody>
+            </table>
           </div>
         </section>
-
-        <!-- ONLINE: Actualizaciones rápidas -->
-        <section class="card card--skinny" id="momentumCard" data-online-only>
-          <div class="card-header">
-            <h3>Actualizaciones destacadas</h3>
-            <p class="text-secondary">Movimientos recientes en las monedas más consultadas.</p>
-          </div>
-          <div id="momentumStatus" class="alert" role="status" hidden></div>
-          <ul class="momentum-list" id="momentumList" hidden></ul>
-        </section>
-
-        <!-- ONLINE: Pronóstico rápido -->
-        <section class="card card--skinny" id="outlookCard" data-online-only>
-          <div class="card-header">
-            <h3>Pronóstico inmediato</h3>
-            <p class="text-secondary">Proyección automática según tendencia semanal.</p>
-          </div>
-          <div id="outlookStatus" class="alert" role="status" hidden></div>
-          <ul class="outlook-list" id="outlookList" hidden></ul>
-        </section>
-      </aside>
-    </div>
-
-    <!-- ONLINE: Tasas -->
-    <section class="card" id="onlineRatesCard">
-      <h3>Tasas disponibles</h3>
-      <p class="text-secondary">
-        Valores obtenidos de <strong id="baseCurrencyLabel">USD</strong>.
-        Última actualización: <span id="ratesUpdatedAt"></span>
-      </p>
-      <div class="table-responsive">
-        <table class="table currency-table">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Moneda</th>
-              <th>Símbolo</th>
-              <th>Tasa vs base</th>
-            </tr>
-          </thead>
-          <tbody id="currencyRates"></tbody>
-        </table>
       </div>
-    </section>
 
-    <div class="analytics-grid">
+      <!-- ONLINE: Pronóstico rápido -->
+      <section class="card card--skinny" id="outlookCard" data-online-only>
+        <div class="card-header">
+          <h3>Pronóstico inmediato</h3>
+          <p class="text-secondary">Proyección automática según tendencia semanal.</p>
+        </div>
+        <div id="outlookStatus" class="alert" role="status" hidden></div>
+        <ul class="outlook-list" id="outlookList" hidden></ul>
+      </section>
+
+      <!-- ONLINE: Actualizaciones rápidas -->
+      <section class="card card--skinny" id="momentumCard" data-online-only>
+        <div class="card-header">
+          <h3>Actualizaciones destacadas</h3>
+          <p class="text-secondary">Movimientos recientes en las monedas más consultadas.</p>
+        </div>
+        <div id="momentumStatus" class="alert" role="status" hidden></div>
+        <ul class="momentum-list" id="momentumList" hidden></ul>
+      </section>
+
       <!-- ONLINE: Variación semanal (Exchangerate.host) -->
       <section class="card card--medium" id="fluctuationCard" data-online-only>
         <div class="card-header">
@@ -250,27 +269,6 @@
         </div>
       </section>
     </div>
-
-    <!-- OFFLINE: Tasas -->
-    <section class="card" id="offlineRatesCard" hidden>
-      <h3>Tasas de referencia offline</h3>
-      <p class="text-secondary">
-        Datos con última actualización: <span id="offlineRatesUpdatedAt"></span>
-      </p>
-      <div class="table-responsive">
-        <table class="table currency-table">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Moneda</th>
-              <th>Símbolo</th>
-              <th>Tasa vs base</th>
-            </tr>
-          </thead>
-          <tbody id="offlineRates"></tbody>
-        </table>
-      </div>
-    </section>
   </main>
 
   <footer class="site-footer">
