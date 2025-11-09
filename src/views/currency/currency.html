@@ -37,53 +37,139 @@
       </button>
     </div>
 
-    <!-- ONLINE: Conversión -->
-    <section class="card" id="onlineConverter">
-      <div class="currency-card__header">
-        <div class="currency-card__title">
-          <h2 class="text-gradient">Conversor de divisas en línea</h2>
-          <p class="text-secondary">Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.</p>
-        </div>
+    <div class="currency-dashboard">
+      <div class="dashboard-column dashboard-column--primary">
+        <!-- ONLINE: Conversión -->
+        <section class="card" id="onlineConverter">
+          <div class="currency-card__header">
+            <div class="currency-card__title">
+              <h2 class="text-gradient">Conversor de divisas en línea</h2>
+              <p class="text-secondary">Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.</p>
+            </div>
+          </div>
+
+          <div id="onlineStatus" class="alert alert-error" hidden></div>
+
+          <form id="currencyForm" class="currency-form" autocomplete="off" novalidate>
+            <!-- Slot para el botón de modo cuando estamos ONLINE -->
+            <div class="form-row form-row--mode" data-mode-slot="online"></div>
+
+            <div class="form-group">
+              <label for="fromCurrency">Moneda origen</label>
+              <select id="fromCurrency" name="from" required></select>
+            </div>
+            <div class="form-group">
+              <label for="toCurrency">Moneda destino</label>
+              <select id="toCurrency" name="to" required></select>
+            </div>
+            <div class="form-group">
+              <label for="amount">Monto</label>
+              <input
+                id="amount"
+                name="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                inputmode="decimal"
+                placeholder="Ej: 150.00"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">Convertir</button>
+          </form>
+        </section>
+
+        <!-- OFFLINE: Conversión (mismo modelo) -->
+        <section class="card" id="offlineConverter" hidden>
+          <div class="currency-card__header">
+            <div class="currency-card__title">
+              <h2>Conversor offline</h2>
+              <p class="text-secondary">Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.</p>
+            </div>
+          </div>
+
+          <form id="offlineCurrencyForm" class="currency-form" autocomplete="off" novalidate>
+            <!-- Slot para el botón de modo cuando estamos OFFLINE -->
+            <div class="form-row form-row--mode" data-mode-slot="offline"></div>
+
+            <div class="form-group">
+              <label for="offlineFromCurrency">Moneda origen</label>
+              <select id="offlineFromCurrency" name="from" required></select>
+            </div>
+            <div class="form-group">
+              <label for="offlineToCurrency">Moneda destino</label>
+              <select id="offlineToCurrency" name="to" required></select>
+            </div>
+            <div class="form-group">
+              <label for="offlineAmount">Monto</label>
+              <input
+                id="offlineAmount"
+                name="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                inputmode="decimal"
+                placeholder="Ej: 150.00"
+                required
+              />
+            </div>
+            <button type="submit" class="btn">Convertir offline</button>
+          </form>
+
+          <section id="offlineConversionResult" class="conversion-result" hidden>
+            <h3>Resultado offline</h3>
+            <p class="conversion-value" id="offlineConvertedAmount"></p>
+            <p id="offlineConversionRate" class="text-secondary"></p>
+            <p id="offlineConversionBaseAmount" class="text-secondary"></p>
+            <small id="offlineConversionUpdatedAt" class="text-muted"></small>
+          </section>
+        </section>
       </div>
 
-      <div id="onlineStatus" class="alert alert-error" hidden></div>
+      <aside class="dashboard-column dashboard-column--insights" aria-label="Resultados y pronóstico">
+        <section id="conversionResult" class="card conversion-result" hidden>
+          <h3>Resultado</h3>
+          <p class="conversion-value" id="convertedAmount"></p>
+          <p id="conversionRate" class="text-secondary"></p>
+          <p id="conversionBaseAmount" class="text-secondary"></p>
+          <small id="conversionUpdatedAt" class="text-muted"></small>
+        </section>
 
-      <form id="currencyForm" class="currency-form" autocomplete="off" novalidate>
-        <!-- Slot para el botón de modo cuando estamos ONLINE -->
-        <div class="form-row form-row--mode" data-mode-slot="online"></div>
+        <!-- ONLINE: Monitor en tiempo real -->
+        <section class="card card--monitor" id="liveRateCard" data-online-only>
+          <div class="card-header">
+            <h3>Monitor USD → EUR</h3>
+            <p class="text-secondary">Actualización automática cada minuto con variación estimada.</p>
+          </div>
+          <div id="liveRateStatus" class="alert" role="status" hidden></div>
+          <div class="live-rate-body" hidden>
+            <p class="live-rate-value"><span id="liveRateValue">--</span></p>
+            <p class="live-rate-delta" id="liveRateDelta" data-trend="flat">Esperando referencia previa...</p>
+            <small class="text-muted">Actualizado: <span id="liveRateUpdatedAt">--</span></small>
+          </div>
+        </section>
 
-        <div class="form-group">
-          <label for="fromCurrency">Moneda origen</label>
-          <select id="fromCurrency" name="from" required></select>
-        </div>
-        <div class="form-group">
-          <label for="toCurrency">Moneda destino</label>
-          <select id="toCurrency" name="to" required></select>
-        </div>
-        <div class="form-group">
-          <label for="amount">Monto</label>
-          <input
-            id="amount"
-            name="amount"
-            type="number"
-            min="0"
-            step="0.01"
-            inputmode="decimal"
-            placeholder="Ej: 150.00"
-            required
-          />
-        </div>
-        <button type="submit" class="btn btn-primary">Convertir</button>
-      </form>
-    </section>
+        <!-- ONLINE: Actualizaciones rápidas -->
+        <section class="card card--skinny" id="momentumCard" data-online-only>
+          <div class="card-header">
+            <h3>Actualizaciones destacadas</h3>
+            <p class="text-secondary">Movimientos recientes en las monedas más consultadas.</p>
+          </div>
+          <div id="momentumStatus" class="alert" role="status" hidden></div>
+          <ul class="momentum-list" id="momentumList" hidden></ul>
+        </section>
 
-    <section id="conversionResult" class="card conversion-result" hidden>
-      <h3>Resultado</h3>
-      <p class="conversion-value" id="convertedAmount"></p>
-      <p id="conversionRate" class="text-secondary"></p>
-      <p id="conversionBaseAmount" class="text-secondary"></p>
-      <small id="conversionUpdatedAt" class="text-muted"></small>
-    </section>
+        <!-- ONLINE: Pronóstico rápido -->
+        <section class="card card--skinny" id="outlookCard" data-online-only>
+          <div class="card-header">
+            <h3>Pronóstico inmediato</h3>
+            <p class="text-secondary">Proyección automática según tendencia semanal.</p>
+          </div>
+          <div id="outlookStatus" class="alert" role="status" hidden></div>
+          <ul class="outlook-list" id="outlookList" hidden></ul>
+        </section>
+      </aside>
+    </div>
 
     <!-- ONLINE: Tasas -->
     <section class="card" id="onlineRatesCard">
@@ -108,20 +194,6 @@
     </section>
 
     <div class="analytics-grid">
-      <!-- ONLINE: Monitor en tiempo real (opcional) -->
-      <section class="card card--compact" id="liveRateCard" data-online-only>
-        <div class="card-header">
-          <h3>Monitor USD → EUR</h3>
-          <p class="text-secondary">Actualización automática cada minuto con variación estimada.</p>
-        </div>
-        <div id="liveRateStatus" class="alert" role="status" hidden></div>
-        <div class="live-rate-body" hidden>
-          <p class="live-rate-value"><span id="liveRateValue">--</span></p>
-          <p class="live-rate-delta" id="liveRateDelta" data-trend="flat">Esperando referencia previa...</p>
-          <small class="text-muted">Actualizado: <span id="liveRateUpdatedAt">--</span></small>
-        </div>
-      </section>
-
       <!-- ONLINE: Variación semanal (Exchangerate.host) -->
       <section class="card card--medium" id="fluctuationCard" data-online-only>
         <div class="card-header">
@@ -178,52 +250,6 @@
         </div>
       </section>
     </div>
-
-    <!-- OFFLINE: Conversión -->
-    <section class="card" id="offlineConverter" hidden>
-      <div class="currency-card__header">
-        <div class="currency-card__title">
-          <h2>Conversor offline</h2>
-          <p class="text-secondary">Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.</p>
-        </div>
-      </div>
-
-      <form id="offlineCurrencyForm" class="currency-form" autocomplete="off" novalidate>
-        <!-- Slot para el botón de modo cuando estamos OFFLINE -->
-        <div class="form-row form-row--mode" data-mode-slot="offline"></div>
-
-        <div class="form-group">
-          <label for="offlineFromCurrency">Moneda origen</label>
-          <select id="offlineFromCurrency" name="from" required></select>
-        </div>
-        <div class="form-group">
-          <label for="offlineToCurrency">Moneda destino</label>
-          <select id="offlineToCurrency" name="to" required></select>
-        </div>
-        <div class="form-group">
-          <label for="offlineAmount">Monto</label>
-          <input
-            id="offlineAmount"
-            name="amount"
-            type="number"
-            min="0"
-            step="0.01"
-            inputmode="decimal"
-            placeholder="Ej: 150.00"
-            required
-          />
-        </div>
-        <button type="submit" class="btn">Convertir offline</button>
-      </form>
-
-      <section id="offlineConversionResult" class="conversion-result" hidden>
-        <h3>Resultado offline</h3>
-        <p class="conversion-value" id="offlineConvertedAmount"></p>
-        <p id="offlineConversionRate" class="text-secondary"></p>
-        <p id="offlineConversionBaseAmount" class="text-secondary"></p>
-        <small id="offlineConversionUpdatedAt" class="text-muted"></small>
-      </section>
-    </section>
 
     <!-- OFFLINE: Tasas -->
     <section class="card" id="offlineRatesCard" hidden>
