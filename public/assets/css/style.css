@@ -289,6 +289,12 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
     align-items: center;
     gap: var(--spacing-sm);
     z-index: 5;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(12px);
 }
 
 .currency-mode-toggle__label {
@@ -297,16 +303,19 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-secondary);
+    margin-right: 0.35rem;
 }
 
 .toggle-switch {
     position: relative;
-    width: 56px;
-    height: 30px;
+    width: 64px;
+    height: 32px;
     border: none;
-    background: transparent;
     padding: 0;
+    border-radius: 999px;
     cursor: pointer;
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.15), rgba(78, 205, 196, 0.15));
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6), 0 2px 6px rgba(15, 23, 42, 0.15);
     transition: var(--transition-fast);
 }
 
@@ -318,34 +327,37 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
 
 .toggle-switch__track {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: calc(100% - 8px);
+    height: calc(100% - 8px);
     background: var(--surface);
     border-radius: 999px;
-    border: 2px solid var(--text-primary);
+    border: 1px solid rgba(15, 23, 42, 0.1);
     position: relative;
+    margin: 4px;
     transition: var(--transition-fast);
+    box-shadow: inset 0 4px 8px rgba(15, 23, 42, 0.12);
 }
 
 .toggle-switch__thumb {
     position: absolute;
     top: 50%;
-    left: 4px;
+    left: 6px;
     transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    background: var(--text-primary);
+    background: linear-gradient(145deg, #fdfdfd, #d9e3f5);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.25);
     transition: var(--transition-fast);
-    box-shadow: var(--shadow-sm);
 }
 
 .toggle-switch.is-offline .toggle-switch__thumb {
-    left: calc(100% - 4px - 20px);
+    left: calc(100% - 6px - 22px);
 }
 
 .toggle-switch.is-offline .toggle-switch__track {
-    border-color: var(--accent-dark);
+    border-color: rgba(78, 205, 196, 0.8);
+    box-shadow: inset 0 4px 10px rgba(78, 205, 196, 0.25);
 }
 
 .currency-container[data-mode="offline"] .currency-mode-toggle__label {
@@ -369,6 +381,7 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
         position: static;
         justify-content: flex-end;
         margin-bottom: var(--spacing-lg);
+        margin-left: auto;
     }
 }
 
