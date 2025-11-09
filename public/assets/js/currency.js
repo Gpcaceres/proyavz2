@@ -15,7 +15,36 @@
     const baseCurrencyLabel = document.getElementById('baseCurrencyLabel');
     const onlineStatus = document.getElementById('onlineStatus');
 
+    const onlineConverterSection = document.getElementById('onlineConverter');
+    const onlineRatesCard = document.getElementById('onlineRatesCard');
+    const currencyContainer = document.querySelector('.currency-container');
     const offlineSection = document.getElementById('offlineConverter');
+    const offlineRatesCard = document.getElementById('offlineRatesCard');
+    const modeToggleContainer = document.getElementById('converterMode');
+    const modeToggleButton = document.getElementById('converterModeToggle');
+    const onlineModeSlot = document.querySelector('[data-mode-slot="online"]');
+    const offlineModeSlot = document.querySelector('[data-mode-slot="offline"]');
+
+    const liveRateCard = document.getElementById('liveRateCard');
+    const liveRateStatus = document.getElementById('liveRateStatus');
+    const liveRateValue = document.getElementById('liveRateValue');
+    const liveRateDelta = document.getElementById('liveRateDelta');
+    const liveRateUpdatedAt = document.getElementById('liveRateUpdatedAt');
+    const liveRateBody = liveRateCard?.querySelector('.live-rate-body');
+
+    const fluctuationCard = document.getElementById('fluctuationCard');
+    const fluctuationStatus = document.getElementById('fluctuationStatus');
+    const fluctuationRangeLabel = document.getElementById('fluctuationRange');
+    const fluctuationTableBody = document.getElementById('fluctuationTable');
+    const fluctuationTableWrapper = fluctuationCard?.querySelector('.table-responsive');
+
+    const timeseriesCard = document.getElementById('timeseriesCard');
+    const timeseriesStatus = document.getElementById('timeseriesStatus');
+    const timeseriesGrid = timeseriesCard?.querySelector('.timeseries-grid');
+    const timeseriesTableBody = document.getElementById('timeseriesTable');
+    const timeseriesDeltaValue = document.getElementById('timeseriesDelta');
+    const timeseriesPercentValue = document.getElementById('timeseriesPercent');
+
     const offlineForm = document.getElementById('offlineCurrencyForm');
     const offlineFromSelect = document.getElementById('offlineFromCurrency');
     const offlineToSelect = document.getElementById('offlineToCurrency');
@@ -54,6 +83,507 @@
     let currencyMap = new Map();
     let ratesData = null;
     const offlineRatesMap = new Map();
+    let isOfflineMode = false;
+    let onlineResultWasHidden = resultSection ? resultSection.hidden : true;
+    let offlineResultWasHidden = offlineResultSection ? offlineResultSection.hidden : true;
+    let forcedOfflineByError = false;
+
+    const LIVE_RATE_BASE = 'USD';
+    const LIVE_RATE_TARGET = 'EUR';
+    const LIVE_RATE_INTERVAL_MS = 60000;
+    const FLUCTUATION_SYMBOLS = ['EUR', 'GBP', 'MXN', 'COP'];
+    const TIMESERIES_TARGET = 'EUR';
+
+    const FLUCTUATION_FALLBACK = {
+      start_date: '2024-05-01',
+      end_date: '2024-05-08',
+      base: 'USD',
+      rates: {
+        EUR: { change: 0.0124, change_pct: 1.36 },
+        GBP: { change: 0.0087, change_pct: 1.12 },
+        MXN: { change: -0.2141, change_pct: -1.23 },
+        COP: { change: -34.51, change_pct: -0.87 },
+      },
+    };
+
+    const LIVE_RATE_FALLBACK = {
+      rate: 0.9276,
+      previousRate: 0.9258,
+      updatedAt: '2024-05-08T12:00:00Z'
+    };
+
+    const TIMESERIES_FALLBACK = {
+      start: '2024-05-01',
+      end: '2024-05-08',
+      base: 'USD',
+      target: TIMESERIES_TARGET,
+      rates: {
+        '2024-05-01': { [TIMESERIES_TARGET]: 0.9210 },
+        '2024-05-02': { [TIMESERIES_TARGET]: 0.9235 },
+        '2024-05-03': { [TIMESERIES_TARGET]: 0.9258 },
+        '2024-05-06': { [TIMESERIES_TARGET]: 0.9281 },
+        '2024-05-07': { [TIMESERIES_TARGET]: 0.9264 },
+        '2024-05-08': { [TIMESERIES_TARGET]: 0.9276 },
+      },
+    };
+
+    let usedFluctuationFallback = false;
+    let usedTimeseriesFallback = false;
+    let usedLiveRateFallback = false;
+    let liveRateIntervalId = null;
+    let previousLiveRate = null;
+
+    function formatDateISO(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatDateDisplay(date) {
+      return date.toLocaleDateString('es-EC', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    }
+
+    function updateStatus(element, message, type = 'info') {
+      if (!element) {
+        return;
+      }
+
+      if (!message) {
+        element.textContent = '';
+        element.hidden = true;
+        element.className = 'alert';
+        return;
+      }
+
+      element.className = type === 'error' ? 'alert alert-error' : 'alert';
+      element.textContent = message;
+      element.hidden = false;
+    }
+
+    function renderLiveRateData(payload, { isFallback = false } = {}) {
+      if (!liveRateCard || !liveRateBody || !liveRateValue || !liveRateDelta || !liveRateUpdatedAt) {
+        return;
+      }
+
+      const rate = Number(payload?.rate);
+      if (!Number.isFinite(rate)) {
+        liveRateBody.hidden = true;
+        updateStatus(liveRateStatus, 'No se pudo calcular la tasa en tiempo real.', 'error');
+        return;
+      }
+
+      const providedPrevious = Number(payload?.previousRate);
+      const referenceRate = Number.isFinite(providedPrevious) ? providedPrevious : previousLiveRate;
+
+      liveRateValue.textContent = rate.toFixed(4);
+
+      if (payload?.updatedAt) {
+        const updated = new Date(payload.updatedAt);
+        liveRateUpdatedAt.textContent = isNaN(updated.getTime())
+          ? payload.updatedAt
+          : updated.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+      } else {
+        liveRateUpdatedAt.textContent = 'En espera';
+      }
+
+      if (Number.isFinite(referenceRate) && referenceRate !== 0) {
+        const delta = rate - referenceRate;
+        const percent = (delta / referenceRate) * 100;
+        const formattedDelta = `${delta >= 0 ? '+' : ''}${delta.toFixed(4)}`;
+        const formattedPercent = `${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
+        liveRateDelta.textContent = `${formattedDelta} (${formattedPercent})`;
+        liveRateDelta.dataset.trend = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+      } else {
+        liveRateDelta.textContent = 'Esperando referencia previa...';
+        liveRateDelta.dataset.trend = 'flat';
+      }
+
+      previousLiveRate = rate;
+      liveRateBody.hidden = false;
+      usedLiveRateFallback = isFallback;
+      updateStatus(liveRateStatus, isFallback ? 'Mostrando tasa estimada con datos de referencia.' : '', 'info');
+    }
+
+    async function loadLiveRateData() {
+      if (!liveRateCard || !liveRateValue) {
+        return;
+      }
+
+      updateStatus(liveRateStatus, 'Actualizando tasa en vivo...', 'info');
+
+      const url = `https://api.exchangerate.host/latest?base=${LIVE_RATE_BASE}&symbols=${LIVE_RATE_TARGET}`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('No se pudo obtener la tasa en vivo.');
+        }
+
+        const data = await response.json();
+        const rate = data?.rates?.[LIVE_RATE_TARGET];
+        if (!Number.isFinite(rate)) {
+          throw new Error('Respuesta inesperada del monitor en vivo.');
+        }
+
+        renderLiveRateData({
+          rate,
+          previousRate: previousLiveRate,
+          updatedAt: data?.date || data?.time_last_update_utc || new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error actualizando tasa en vivo', error);
+
+        usedLiveRateFallback = true;
+        renderLiveRateData(LIVE_RATE_FALLBACK, { isFallback: true });
+      }
+    }
+
+    function startLiveRateUpdates() {
+      if (!liveRateCard || liveRateIntervalId) {
+        return;
+      }
+
+      loadLiveRateData();
+      liveRateIntervalId = setInterval(loadLiveRateData, LIVE_RATE_INTERVAL_MS);
+    }
+
+    function stopLiveRateUpdates() {
+      if (liveRateIntervalId) {
+        clearInterval(liveRateIntervalId);
+        liveRateIntervalId = null;
+      }
+    }
+
+    function syncModeToggleSlot() {
+      if (!modeToggleContainer) {
+        return;
+      }
+
+      const targetSlot = isOfflineMode ? offlineModeSlot : onlineModeSlot;
+
+      if (!targetSlot || targetSlot.contains(modeToggleContainer)) {
+        return;
+      }
+
+      targetSlot.appendChild(modeToggleContainer);
+    }
+
+    function setConverterMode(offline) {
+      const shouldGoOffline = Boolean(offline);
+      isOfflineMode = shouldGoOffline;
+
+      if (currencyContainer) {
+        currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
+      }
+
+      syncModeToggleSlot();
+
+      if (onlineConverterSection) {
+        onlineConverterSection.hidden = isOfflineMode;
+      }
+
+      if (onlineRatesCard) {
+        onlineRatesCard.hidden = isOfflineMode;
+      }
+
+      if (resultSection) {
+        if (isOfflineMode) {
+          onlineResultWasHidden = resultSection.hidden;
+          resultSection.hidden = true;
+        } else {
+          resultSection.hidden = onlineResultWasHidden;
+        }
+      }
+
+      if (offlineSection) {
+        offlineSection.hidden = !isOfflineMode;
+      }
+
+      if (offlineRatesCard) {
+        offlineRatesCard.hidden = !isOfflineMode;
+      }
+
+      if (liveRateCard) {
+        liveRateCard.hidden = isOfflineMode;
+      }
+
+      if (fluctuationCard) {
+        fluctuationCard.hidden = isOfflineMode;
+      }
+
+      if (timeseriesCard) {
+        timeseriesCard.hidden = isOfflineMode;
+      }
+
+      if (isOfflineMode) {
+        stopLiveRateUpdates();
+        if (liveRateBody) {
+          liveRateBody.hidden = true;
+        }
+        updateStatus(liveRateStatus, 'Disponible únicamente en modo en línea.', 'info');
+      } else {
+        updateStatus(liveRateStatus, '', 'info');
+        startLiveRateUpdates();
+      }
+
+      if (offlineResultSection) {
+        if (isOfflineMode) {
+          offlineResultSection.hidden = offlineResultWasHidden;
+        } else {
+          offlineResultWasHidden = offlineResultSection.hidden;
+          offlineResultSection.hidden = true;
+        }
+      }
+
+      if (modeToggleButton) {
+        modeToggleButton.setAttribute('aria-pressed', String(isOfflineMode));
+        modeToggleButton.classList.toggle('is-offline', isOfflineMode);
+        modeToggleButton.textContent = isOfflineMode ? 'OF' : 'ON';
+        modeToggleButton.setAttribute(
+          'aria-label',
+          isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline'
+        );
+      }
+    }
+
+    function applyFluctuationRange(start, end) {
+      if (!fluctuationRangeLabel) {
+        return;
+      }
+
+      const startDate = start ? new Date(start) : null;
+      const endDate = end ? new Date(end) : null;
+
+      const formattedStart = startDate && !isNaN(startDate.getTime())
+        ? formatDateDisplay(startDate)
+        : (start || '');
+      const formattedEnd = endDate && !isNaN(endDate.getTime())
+        ? formatDateDisplay(endDate)
+        : (end || '');
+
+      if (!formattedStart && !formattedEnd) {
+        fluctuationRangeLabel.textContent = 'Últimos 7 días';
+        return;
+      }
+
+      if (!formattedEnd) {
+        fluctuationRangeLabel.textContent = formattedStart;
+        return;
+      }
+
+      fluctuationRangeLabel.textContent = `${formattedStart} — ${formattedEnd}`;
+    }
+
+    function renderFluctuationData(payload, { isFallback = false } = {}) {
+      if (!fluctuationTableBody) {
+        return;
+      }
+
+      const rates = payload?.rates;
+      if (!rates || typeof rates !== 'object') {
+        updateStatus(fluctuationStatus, 'Sin datos recientes para mostrar.', 'info');
+        return;
+      }
+
+      const entries = Object.entries(rates);
+      if (!entries.length) {
+        updateStatus(fluctuationStatus, 'Sin datos recientes para mostrar.', 'info');
+        return;
+      }
+
+      const startDate = payload.start_date || payload.startDate || payload.start;
+      const endDate = payload.end_date || payload.endDate || payload.end;
+      applyFluctuationRange(startDate, endDate);
+
+      fluctuationTableBody.innerHTML = '';
+
+      entries.forEach(([code, info]) => {
+        const change = Number(info?.change ?? 0);
+        const percent = Number(info?.change_pct ?? info?.changePercent ?? 0);
+        const row = document.createElement('tr');
+        const formattedChange = `${change >= 0 ? '+' : ''}${change.toFixed(4)}`;
+        const formattedPercent = `${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
+        row.innerHTML = `
+          <td>${code}</td>
+          <td>${formattedChange}</td>
+          <td>${formattedPercent}</td>
+        `;
+        fluctuationTableBody.appendChild(row);
+      });
+
+      if (fluctuationTableWrapper) {
+        fluctuationTableWrapper.hidden = false;
+      }
+
+      const fallbackMessage = isFallback
+        ? 'Mostrando variaciones con datos de referencia locales.'
+        : '';
+      updateStatus(fluctuationStatus, fallbackMessage, 'info');
+    }
+
+    async function loadFluctuationData() {
+      if (!fluctuationCard || !fluctuationTableBody) {
+        return;
+      }
+
+      if (fluctuationTableWrapper) {
+        fluctuationTableWrapper.hidden = true;
+      }
+
+      updateStatus(fluctuationStatus, 'Cargando variaciones recientes...', 'info');
+
+      const end = new Date();
+      const start = new Date(end);
+      start.setDate(end.getDate() - 7);
+
+      const startStr = formatDateISO(start);
+      const endStr = formatDateISO(end);
+
+      applyFluctuationRange(startStr, endStr);
+
+      const url = `https://api.exchangerate.host/fluctuation?start_date=${startStr}&end_date=${endStr}&base=USD&symbols=${FLUCTUATION_SYMBOLS.join(',')}`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('No se pudo obtener la variación semanal.');
+        }
+
+        const data = await response.json();
+        if (data?.success === false || !data?.rates) {
+          throw new Error('Respuesta inesperada de exchangerate.host');
+        }
+
+        renderFluctuationData(data);
+      } catch (error) {
+        console.error('Error cargando fluctuaciones', error);
+
+        if (!usedFluctuationFallback) {
+          usedFluctuationFallback = true;
+          renderFluctuationData(FLUCTUATION_FALLBACK, { isFallback: true });
+          return;
+        }
+
+        updateStatus(
+          fluctuationStatus,
+          error.message || 'No se pudo calcular la variación semanal de monedas.',
+          'error'
+        );
+      }
+    }
+
+    function renderTimeseriesData(payload, { isFallback = false } = {}) {
+      if (!timeseriesCard || !timeseriesTableBody || !timeseriesDeltaValue || !timeseriesPercentValue) {
+        return;
+      }
+
+      const rates = payload?.rates;
+      if (!rates || typeof rates !== 'object') {
+        updateStatus(timeseriesStatus, 'Sin datos históricos para mostrar.', 'info');
+        return;
+      }
+
+      const dates = Object.keys(rates).sort();
+      if (!dates.length) {
+        updateStatus(timeseriesStatus, 'Sin datos históricos para mostrar.', 'info');
+        return;
+      }
+
+      timeseriesTableBody.innerHTML = '';
+
+      dates.forEach((dateKey) => {
+        const rateValue = rates[dateKey]?.[TIMESERIES_TARGET];
+        if (typeof rateValue !== 'number') {
+          return;
+        }
+
+        const row = document.createElement('tr');
+        const day = new Date(dateKey);
+        row.innerHTML = `
+          <td>${isNaN(day.getTime()) ? dateKey : formatDateDisplay(day)}</td>
+          <td>${rateValue.toFixed(4)}</td>
+        `;
+        timeseriesTableBody.appendChild(row);
+      });
+
+      const firstRate = rates[dates[0]]?.[TIMESERIES_TARGET];
+      const lastRate = rates[dates[dates.length - 1]]?.[TIMESERIES_TARGET];
+
+      if (typeof firstRate === 'number' && typeof lastRate === 'number') {
+        const delta = lastRate - firstRate;
+        const percentChange = firstRate !== 0 ? (delta / firstRate) * 100 : 0;
+        const formattedDelta = `${delta >= 0 ? '+' : ''}${delta.toFixed(4)}`;
+        const formattedPercent = `${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%`;
+        timeseriesDeltaValue.textContent = formattedDelta;
+        timeseriesPercentValue.textContent = formattedPercent;
+      } else {
+        timeseriesDeltaValue.textContent = 'No disponible';
+        timeseriesPercentValue.textContent = 'No disponible';
+      }
+
+      if (timeseriesGrid) {
+        timeseriesGrid.hidden = false;
+      }
+
+      const fallbackMessage = isFallback
+        ? 'Mostrando serie histórica con datos de referencia locales.'
+        : '';
+      updateStatus(timeseriesStatus, fallbackMessage, 'info');
+    }
+
+    async function loadTimeseriesData() {
+      if (!timeseriesCard || !timeseriesTableBody || !timeseriesDeltaValue || !timeseriesPercentValue) {
+        return;
+      }
+
+      if (timeseriesGrid) {
+        timeseriesGrid.hidden = true;
+      }
+
+      updateStatus(timeseriesStatus, 'Cargando serie histórica...', 'info');
+
+      const end = new Date();
+      const start = new Date(end);
+      start.setDate(end.getDate() - 7);
+
+      const startStr = formatDateISO(start);
+      const endStr = formatDateISO(end);
+
+      const url = `https://api.frankfurter.app/timeseries?start=${startStr}&end=${endStr}&from=USD&to=${TIMESERIES_TARGET}`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('No se pudo obtener la serie histórica.');
+        }
+
+        const data = await response.json();
+        if (!data?.rates || typeof data.rates !== 'object') {
+          throw new Error('Respuesta inesperada de Frankfurter');
+        }
+
+        renderTimeseriesData(data);
+      } catch (error) {
+        console.error('Error cargando serie histórica', error);
+
+        if (!usedTimeseriesFallback) {
+          usedTimeseriesFallback = true;
+          renderTimeseriesData(TIMESERIES_FALLBACK, { isFallback: true });
+          return;
+        }
+
+        updateStatus(
+          timeseriesStatus,
+          error.message || 'No se pudo mostrar la serie diaria de Frankfurter.',
+          'error'
+        );
+      }
+    }
 
     function getOfflineCurrencyInfo(code) {
       const normalizedCode = String(code || '').toUpperCase();
@@ -198,6 +728,11 @@
             toSelect.value = fallback;
           }
         }
+
+        if (forcedOfflineByError) {
+          forcedOfflineByError = false;
+          setConverterMode(false);
+        }
       } catch (error) {
         console.error('Error cargando tasas', error);
         ratesData = null;
@@ -208,6 +743,8 @@
         ratesUpdatedAt.textContent = 'No disponible';
         showOnlineStatus(error.message || 'La API de conversión no está disponible en este momento.');
         setOnlineFormDisabled(true);
+        forcedOfflineByError = true;
+        setConverterMode(true);
       }
     }
 
@@ -292,6 +829,7 @@
         }
 
         resultSection.hidden = false;
+        onlineResultWasHidden = false;
         resultSection.classList.add('highlight');
         setTimeout(() => resultSection.classList.remove('highlight'), 600);
       } catch (error) {
@@ -409,10 +947,21 @@
 
       if (offlineResultSection) {
         offlineResultSection.hidden = false;
+        offlineResultWasHidden = false;
         offlineResultSection.classList.add('highlight');
         setTimeout(() => offlineResultSection.classList.remove('highlight'), 600);
       }
     }
+
+    if (modeToggleButton) {
+      modeToggleButton.addEventListener('click', () => {
+        forcedOfflineByError = false;
+        setConverterMode(!isOfflineMode);
+      });
+    }
+
+    syncModeToggleSlot();
+    setConverterMode(false);
 
     form.addEventListener('submit', convertCurrency);
     if (offlineForm) {
@@ -421,5 +970,7 @@
 
     populateOfflineData();
     loadRates();
+    loadFluctuationData();
+    loadTimeseriesData();
   });
 })();
