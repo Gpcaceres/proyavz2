@@ -164,6 +164,71 @@ nav a[href*="itinerary"]::before{content:'📋 '}
 .dashboard-column--primary .card,.dashboard-column--insights .card{margin-bottom:0}
 .dashboard-column--insights{position:sticky;top:var(--spacing-xl);z-index:2}
 
+.currency-layout{
+  display:flex;
+  gap:var(--spacing-xl);
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+.currency-layout__left{
+  flex:0 1 360px;
+  max-width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:var(--spacing-xl);
+}
+.currency-layout__left .card{margin-bottom:0}
+.currency-layout__right{
+  flex:1 1 520px;
+  min-width:260px;
+  display:flex;
+  flex-direction:column;
+  gap:var(--spacing-xl);
+}
+.currency-layout__right .card{margin-bottom:0}
+.currency-insights-grid{
+  display:grid;
+  gap:var(--spacing-xl);
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  align-items:stretch;
+}
+.currency-insights-grid .card{margin-bottom:0}
+.currency-insights-grid .card--wide{grid-column:1 / -1}
+
+@media (max-width:1200px){
+  .currency-layout__left{flex-basis:320px}
+}
+
+@media (max-width:1024px){
+  .currency-layout{flex-direction:column}
+  .currency-layout__left,
+  .currency-layout__right{
+    flex:1 1 100%;
+    max-width:none;
+  }
+}
+
+@media (max-width:768px){
+  .currency-insights-grid{grid-template-columns:1fr}
+}
+
+@media (max-width:576px){
+  .currency-layout{gap:var(--spacing-lg)}
+  .currency-layout__left,
+  .currency-layout__right{gap:var(--spacing-lg)}
+}
+
+.conversion-result{
+  margin-top:var(--spacing-xl);
+  padding-top:var(--spacing-lg);
+  border-top:1px solid var(--border-color);
+  display:grid;
+  gap:var(--spacing-sm);
+}
+.conversion-result h3{font-size:1.1rem;font-weight:600;margin-bottom:var(--spacing-xs)}
+.conversion-result .conversion-value{font-size:1.75rem;font-weight:700;color:var(--primary)}
+.conversion-result small{color:var(--text-muted)}
+
 /* Analíticas */
 .analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--spacing-lg);margin-top:var(--spacing-xl);align-items:stretch}
 .card--monitor{background:linear-gradient(180deg,rgba(78,205,196,.12),rgba(255,255,255,.92))}
