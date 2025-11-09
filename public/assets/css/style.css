@@ -322,6 +322,7 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
 .toggle-switch:focus-visible {
     outline: 3px solid rgba(74, 144, 226, 0.45);
     outline-offset: 3px;
+    border-radius: 999px;
 }
 
 .toggle-switch__track {
