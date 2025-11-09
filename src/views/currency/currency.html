@@ -24,7 +24,7 @@
   </header>
 
   <main class="container currency-container" data-mode="online">
-    <!-- ÚNICO botón ON/OF -->
+    <!-- ÚNICO botón ON/OF (se reubica dinámicamente en los slots) -->
     <div class="currency-mode-toggle" id="converterMode">
       <button
         type="button"
@@ -49,6 +49,9 @@
       <div id="onlineStatus" class="alert alert-error" hidden></div>
 
       <form id="currencyForm" class="currency-form" autocomplete="off" novalidate>
+        <!-- Slot para el botón de modo cuando estamos ONLINE -->
+        <div class="form-row form-row--mode" data-mode-slot="online"></div>
+
         <div class="form-group">
           <label for="fromCurrency">Moneda origen</label>
           <select id="fromCurrency" name="from" required></select>
@@ -114,6 +117,9 @@
       </div>
 
       <form id="offlineCurrencyForm" class="currency-form" autocomplete="off" novalidate>
+        <!-- Slot para el botón de modo cuando estamos OFFLINE -->
+        <div class="form-row form-row--mode" data-mode-slot="offline"></div>
+
         <div class="form-group">
           <label for="offlineFromCurrency">Moneda origen</label>
           <select id="offlineFromCurrency" name="from" required></select>

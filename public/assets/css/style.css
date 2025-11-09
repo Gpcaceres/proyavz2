@@ -208,11 +208,14 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
   background: rgba(255, 255, 255, 0.98);
 }
 
-/* Currency: visibilidad por modo */
+/* ====== Currency: visibilidad por modo ====== */
 .currency-container[data-mode="offline"] #onlineConverter,
 .currency-container[data-mode="offline"] #onlineRatesCard { display: none; }
-.currency-container[data-mode="online"] #offlineConverter { display: none; }
 
+.currency-container[data-mode="online"] #offlineConverter,
+.currency-container[data-mode="online"] #offlineRatesCard { display: none; }
+
+/* ====== Currency: layout y controles ====== */
 .currency-card__header {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: var(--spacing-lg); margin-bottom: var(--spacing-lg);
@@ -407,6 +410,12 @@ select { color: var(--text-primary); }
     margin-bottom: var(--spacing-lg); margin-left: auto;
   }
   .mode-toggle { width: 100%; justify-content: space-between; }
+
+  .currency-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
 }
 
 @media (min-width: 768px) {

@@ -22,12 +22,21 @@
     const onlineRatesCard = document.getElementById('onlineRatesCard');
     const currencyContainer = document.querySelector('.currency-container');
 
-    // ÚNICO botón de modo
-    const modeToggleButton = document.getElementById('converterModeToggle') || document.querySelector('[data-mode-toggle]');
-
-    // Offline
+    // Offline sections/cards
     const offlineSection = document.getElementById('offlineConverter');
+    const offlineRatesCard = document.getElementById('offlineRatesCard');
 
+    // ÚNICO botón de modo (soporta dos posibles selectores)
+    const modeToggleButton =
+      document.getElementById('converterModeToggle') ||
+      document.querySelector('[data-mode-toggle]');
+
+    // (Opcional) slots para mover el botón de modo según el layout
+    const modeToggleContainer = document.getElementById('converterMode');
+    const onlineModeSlot = document.querySelector('[data-mode-slot="online"]');
+    const offlineModeSlot = document.querySelector('[data-mode-slot="offline"]');
+
+    // Offline form/DOM
     const offlineForm = document.getElementById('offlineCurrencyForm');
     const offlineFromSelect = document.getElementById('offlineFromCurrency');
     const offlineToSelect = document.getElementById('offlineToCurrency');
@@ -44,7 +53,7 @@
 
     // ---- Persistencia ----
     const STORAGE = {
-      MODE: 'currencyMode',             // 'online' | 'offline'
+      MODE: 'currencyMode', // 'online' | 'offline'
       FROM: 'currencyFrom',
       TO: 'currencyTo',
       OFF_FROM: 'currencyOffFrom',
@@ -80,46 +89,12 @@
     let offlineResultWasHidden = offlineResultSection ? offlineResultSection.hidden : true;
     let forcedOfflineByError = false;
 
-    // ---- Modo Online/Offline ----
-    function setConverterMode(offline) {
-      isOfflineMode = Boolean(offline);
-
-      if (currencyContainer) {
-        currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
-      }
-      if (onlineConverterSection) onlineConverterSection.hidden = isOfflineMode;
-      if (onlineRatesCard) onlineRatesCard.hidden = isOfflineMode;
-      if (offlineSection) offlineSection.hidden = !isOfflineMode;
-
-      if (resultSection) {
-        if (isOfflineMode) {
-          onlineResultWasHidden = resultSection.hidden;
-          resultSection.hidden = true;
-        } else {
-          resultSection.hidden = onlineResultWasHidden;
-        }
-      }
-      if (offlineResultSection) {
-        if (isOfflineMode) {
-          offlineResultSection.hidden = offlineResultWasHidden;
-        } else {
-          offlineResultWasHidden = offlineResultSection.hidden;
-          offlineResultSection.hidden = true;
-        }
-      }
-
-      // Único botón
-      if (modeToggleButton) {
-        modeToggleButton.setAttribute('aria-pressed', String(isOfflineMode));
-        modeToggleButton.classList.toggle('is-offline', isOfflineMode);
-        modeToggleButton.textContent = isOfflineMode ? 'OF' : 'ON';
-        modeToggleButton.setAttribute(
-          'aria-label',
-          isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline'
-        );
-      }
-
-      saveMode();
+    // ---- Util: mover botón al slot correspondiente (opcional) ----
+    function syncModeToggleSlot() {
+      if (!modeToggleContainer) return;
+      const targetSlot = isOfflineMode ? offlineModeSlot : onlineModeSlot;
+      if (!targetSlot || targetSlot.contains(modeToggleContainer)) return;
+      try { targetSlot.appendChild(modeToggleContainer); } catch {}
     }
 
     // ---- Persistencia modo ----
@@ -159,6 +134,57 @@
         if (sFrom && offlineRatesMap.has(sFrom)) offlineFromSelect.value = sFrom;
         if (sTo && offlineRatesMap.has(sTo)) offlineToSelect.value = sTo;
       } catch {}
+    }
+
+    // ---- Modo Online/Offline ----
+    function setConverterMode(offline) {
+      isOfflineMode = Boolean(offline);
+
+      if (currencyContainer) {
+        currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
+      }
+
+      // Online sections/cards
+      if (onlineConverterSection) onlineConverterSection.hidden = isOfflineMode;
+      if (onlineRatesCard) onlineRatesCard.hidden = isOfflineMode;
+
+      // Offline sections/cards
+      if (offlineSection) offlineSection.hidden = !isOfflineMode;
+      if (offlineRatesCard) offlineRatesCard.hidden = !isOfflineMode;
+
+      // Result sections visibility memory
+      if (resultSection) {
+        if (isOfflineMode) {
+          onlineResultWasHidden = resultSection.hidden;
+          resultSection.hidden = true;
+        } else {
+          resultSection.hidden = onlineResultWasHidden;
+        }
+      }
+      if (offlineResultSection) {
+        if (isOfflineMode) {
+          offlineResultSection.hidden = offlineResultWasHidden;
+        } else {
+          offlineResultWasHidden = offlineResultSection.hidden;
+          offlineResultSection.hidden = true;
+        }
+      }
+
+      // Único botón: estado/ARIA/estilo
+      if (modeToggleButton) {
+        modeToggleButton.setAttribute('aria-pressed', String(isOfflineMode));
+        modeToggleButton.classList.toggle('is-offline', isOfflineMode);
+        modeToggleButton.textContent = isOfflineMode ? 'OF' : 'ON';
+        modeToggleButton.setAttribute(
+          'aria-label',
+          isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline'
+        );
+      }
+
+      // Slot opcional
+      syncModeToggleSlot();
+
+      saveMode();
     }
 
     // ---- Utilidades ----
@@ -238,13 +264,15 @@
         }
 
         // Fecha de actualización
-        if (data.updatedAt) {
-          const updated = new Date(data.updatedAt);
-          ratesUpdatedAt.textContent = isNaN(updated.getTime())
-            ? data.updatedAt
-            : updated.toLocaleString('es-EC');
-        } else {
-          ratesUpdatedAt.textContent = 'No disponible';
+        if (ratesUpdatedAt) {
+          if (data.updatedAt) {
+            const updated = new Date(data.updatedAt);
+            ratesUpdatedAt.textContent = isNaN(updated.getTime())
+              ? data.updatedAt
+              : updated.toLocaleString('es-EC');
+          } else {
+            ratesUpdatedAt.textContent = 'No disponible';
+          }
         }
 
         // Defaults de la API
@@ -286,7 +314,7 @@
         fromSelect.innerHTML = '<option value="" disabled selected>Sin datos en línea</option>';
         toSelect.innerHTML = '<option value="" disabled selected>Sin datos en línea</option>';
         ratesTableBody.innerHTML = '';
-        ratesUpdatedAt.textContent = 'No disponible';
+        if (ratesUpdatedAt) ratesUpdatedAt.textContent = 'No disponible';
         showOnlineStatus(error.message || 'La API de conversión no está disponible en este momento.');
         setOnlineFormDisabled(true);
         forcedOfflineByError = true;
@@ -383,12 +411,12 @@
           }
         }
 
-        if (conversion?.updatedAt) {
+        if (conversion?.updatedAt && resultUpdated) {
           const updated = new Date(conversion.updatedAt);
           resultUpdated.textContent = isNaN(updated.getTime())
             ? `Actualizado: ${conversion.updatedAt}`
             : `Actualizado: ${updated.toLocaleString('es-EC')}`;
-        } else {
+        } else if (resultUpdated) {
           resultUpdated.textContent = '';
         }
 
@@ -538,6 +566,7 @@
     offlineToSelect?.addEventListener('change', saveSelects);
 
     // ---- Estado inicial ----
+    syncModeToggleSlot();
     const initialOffline = loadSavedMode();
     setConverterMode(initialOffline);
 
