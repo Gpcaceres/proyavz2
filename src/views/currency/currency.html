@@ -23,14 +23,32 @@
     </div>
   </header>
 
-  <main class="container currency-container">
+  <main class="container currency-container" data-mode="online">
+    <!-- ONLINE: Conversión -->
     <section class="card" id="onlineConverter">
-      <h2 class="text-gradient">Conversor de divisas en línea</h2>
-      <p class="text-secondary">Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.</p>
+      <div class="currency-card__header">
+        <div class="currency-card__title">
+          <h2 class="text-gradient">Conversor de divisas en línea</h2>
+          <p class="text-secondary">Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.</p>
+        </div>
+      </div>
 
       <div id="onlineStatus" class="alert alert-error" hidden></div>
 
-      <form id="currencyForm" class="currency-form">
+      <form id="currencyForm" class="currency-form" autocomplete="off" novalidate>
+        <div class="form-row form-row--mode" data-mode-slot="online">
+          <div class="currency-mode-toggle" id="converterMode">
+            <button
+              type="button"
+              class="mode-toggle"
+              id="converterModeToggle"
+              aria-pressed="false"
+              aria-label="Cambiar a modo offline"
+            >
+              ON
+            </button>
+          </div>
+        </div>
         <div class="form-group">
           <label for="fromCurrency">Moneda origen</label>
           <select id="fromCurrency" name="from" required></select>
@@ -41,7 +59,16 @@
         </div>
         <div class="form-group">
           <label for="amount">Monto</label>
-          <input id="amount" name="amount" type="number" min="0" step="0.01" placeholder="Ej: 150.00" required />
+          <input
+            id="amount"
+            name="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Ej: 150.00"
+            required
+          />
         </div>
         <button type="submit" class="btn btn-primary">Convertir</button>
       </form>
@@ -55,6 +82,7 @@
       <small id="conversionUpdatedAt" class="text-muted"></small>
     </section>
 
+    <!-- ONLINE: Tasas -->
     <section class="card" id="onlineRatesCard">
       <h3>Tasas disponibles</h3>
       <p class="text-secondary">Valores obtenidos de <strong id="baseCurrencyLabel">USD</strong>. Última actualización: <span id="ratesUpdatedAt"></span></p>
@@ -73,11 +101,73 @@
       </div>
     </section>
 
-    <section class="card" id="offlineConverter">
-      <h2>Conversor offline</h2>
-      <p class="text-secondary">Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.</p>
+    <!-- ONLINE: Variación semanal (Exchangerate.host) -->
+    <section class="card" id="fluctuationCard" data-online-only>
+      <div class="card-header">
+        <h3>Variación semanal destacada</h3>
+        <p class="text-secondary">
+          Datos desde <span id="fluctuationRange"></span> basados en <strong>exchangerate.host</strong>.
+        </p>
+      </div>
+      <div id="fluctuationStatus" class="alert" role="status" hidden></div>
+      <div class="table-responsive" hidden>
+        <table class="table currency-table">
+          <thead>
+            <tr>
+              <th>Moneda</th>
+              <th>Cambio absoluto</th>
+              <th>Variación %</th>
+            </tr>
+          </thead>
+          <tbody id="fluctuationTable"></tbody>
+        </table>
+      </div>
+    </section>
 
-      <form id="offlineCurrencyForm" class="currency-form">
+    <!-- ONLINE: Serie histórica (Frankfurter) -->
+    <section class="card" id="timeseriesCard" data-online-only>
+      <div class="card-header">
+        <h3>Serie diaria Frankfurter</h3>
+        <p class="text-secondary">
+          Últimos valores publicados por el BCE vía Frankfurter. Incluye variación acumulada.
+        </p>
+      </div>
+      <div id="timeseriesStatus" class="alert" role="status" hidden></div>
+      <div class="timeseries-grid" hidden>
+        <section class="timeseries-summary">
+          <h4>Resumen USD → EUR</h4>
+          <p class="timeseries-delta">
+            Cambio absoluto: <span id="timeseriesDelta"></span>
+          </p>
+          <p class="timeseries-delta">
+            Variación porcentual: <span id="timeseriesPercent"></span>
+          </p>
+        </section>
+        <div class="table-responsive">
+          <table class="table currency-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tasa</th>
+              </tr>
+            </thead>
+            <tbody id="timeseriesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- OFFLINE: Conversión (mismo modelo) -->
+    <section class="card" id="offlineConverter" hidden>
+      <div class="currency-card__header">
+        <div class="currency-card__title">
+          <h2>Conversor offline</h2>
+          <p class="text-secondary">Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.</p>
+        </div>
+      </div>
+
+      <form id="offlineCurrencyForm" class="currency-form" autocomplete="off" novalidate>
+        <div class="form-row form-row--mode" data-mode-slot="offline"></div>
         <div class="form-group">
           <label for="offlineFromCurrency">Moneda origen</label>
           <select id="offlineFromCurrency" name="from" required></select>
@@ -88,7 +178,16 @@
         </div>
         <div class="form-group">
           <label for="offlineAmount">Monto</label>
-          <input id="offlineAmount" name="amount" type="number" min="0" step="0.01" placeholder="Ej: 150.00" required />
+          <input
+            id="offlineAmount"
+            name="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Ej: 150.00"
+            required
+          />
         </div>
         <button type="submit" class="btn">Convertir offline</button>
       </form>
@@ -100,7 +199,10 @@
         <p id="offlineConversionBaseAmount" class="text-secondary"></p>
         <small id="offlineConversionUpdatedAt" class="text-muted"></small>
       </section>
+    </section>
 
+    <!-- OFFLINE: Tasas (separado, igual que online) -->
+    <section class="card" id="offlineRatesCard" hidden>
       <h3>Tasas de referencia offline</h3>
       <p class="text-secondary">Datos con última actualización: <span id="offlineRatesUpdatedAt"></span></p>
       <div class="table-responsive">
@@ -124,6 +226,12 @@
       <small>Conversor de moneda para viajeros - Datos simulados para demostración.</small>
     </div>
   </footer>
+
+  <noscript>
+    <div class="container basic-itinerary" style="margin-top:1rem">
+      <strong>Este conversor requiere JavaScript.</strong>
+    </div>
+  </noscript>
 
   <script src="/assets/js/layout.js"></script>
   <script src="/assets/js/auth-api.js"></script>
