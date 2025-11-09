@@ -164,34 +164,7 @@ nav a[href*="itinerary"]::before{content:'📋 '}
 .dashboard-column--primary .card,.dashboard-column--insights .card{margin-bottom:0}
 .dashboard-column--insights{position:sticky;top:var(--spacing-xl);z-index:2}
 
-.currency-layout{display:grid;gap:var(--spacing-xl);grid-template-columns:minmax(0,28rem) minmax(0,1fr);align-items:start}
-.currency-layout__left{display:grid;gap:var(--spacing-xl);align-content:start}
-.currency-layout__left .card{margin-bottom:0}
-.currency-layout__right{display:grid;gap:var(--spacing-xl);grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
-.currency-layout__right .card{margin-bottom:0}
-.currency-layout__right #onlineRatesCard,
-.currency-layout__right #offlineRatesCard,
-.currency-layout__right .card--medium,
-.currency-layout__right .card--wide{grid-column:1 / -1}
-
-@media (max-width:1200px){
-  .currency-layout{grid-template-columns:minmax(0,24rem) minmax(0,1fr)}
-}
-
-@media (max-width:1024px){
-  .currency-layout{grid-template-columns:1fr}
-  .currency-layout__right{grid-template-columns:repeat(auto-fit,minmax(16rem,1fr))}
-}
-
-@media (max-width:768px){
-  .currency-layout__right{grid-template-columns:1fr}
-}
-
-@media (max-width:576px){
-  .currency-layout{gap:var(--spacing-lg)}
-  .currency-layout__left{gap:var(--spacing-lg)}
-  .currency-layout__right{gap:var(--spacing-lg)}
-}
+/* (Aquí no hay secciones en conflicto) */
 
 /* Analíticas */
 .analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--spacing-lg);margin-top:var(--spacing-xl);align-items:stretch}

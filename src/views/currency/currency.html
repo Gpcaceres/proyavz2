@@ -24,7 +24,7 @@
   </header>
 
   <main class="container currency-container" data-mode="online">
-    <!-- ÚNICO botón ON/OF (se reubica dinámicamente a los slots) -->
+    <!-- ÚNICO botón ON/OFF (se reubica dinámicamente a los slots) -->
     <div class="currency-mode-toggle" id="converterMode">
       <button
         type="button"
@@ -37,8 +37,8 @@
       </button>
     </div>
 
-    <div class="currency-layout">
-      <div class="currency-layout__left">
+    <div class="currency-grid">
+      <div class="currency-grid__converter">
         <!-- ONLINE: Conversión -->
         <section class="card" id="onlineConverter">
           <div class="currency-card__header">
@@ -132,23 +132,24 @@
             <small id="offlineConversionUpdatedAt" class="text-muted"></small>
           </section>
         </section>
-
-        <!-- ONLINE: Monitor en tiempo real -->
-        <section class="card card--monitor" id="liveRateCard" data-online-only>
-          <div class="card-header">
-            <h3>Monitor USD → EUR</h3>
-            <p class="text-secondary">Actualización automática cada minuto con variación estimada.</p>
-          </div>
-          <div id="liveRateStatus" class="alert" role="status" hidden></div>
-          <div class="live-rate-body" hidden>
-            <p class="live-rate-value"><span id="liveRateValue">--</span></p>
-            <p class="live-rate-delta" id="liveRateDelta" data-trend="flat">Esperando referencia previa...</p>
-            <small class="text-muted">Actualizado: <span id="liveRateUpdatedAt">--</span></small>
-          </div>
-        </section>
       </div>
 
-      <div class="currency-layout__right">
+      <!-- ONLINE: Monitor en tiempo real -->
+      <section class="card card--monitor" id="liveRateCard" data-online-only>
+        <div class="card-header">
+          <h3>Monitor USD → EUR</h3>
+          <p class="text-secondary">Actualización automática cada minuto con variación estimada.</p>
+        </div>
+        <div id="liveRateStatus" class="alert" role="status" hidden></div>
+        <div class="live-rate-body" hidden>
+          <p class="live-rate-value"><span id="liveRateValue">--</span></p>
+          <p class="live-rate-delta" id="liveRateDelta" data-trend="flat">Esperando referencia previa...</p>
+          <small class="text-muted">Actualizado: <span id="liveRateUpdatedAt">--</span></small>
+        </div>
+      </section>
+
+      <div class="currency-grid__rates">
+        <!-- ONLINE: Tasas -->
         <section class="card" id="onlineRatesCard">
           <h3>Tasas disponibles</h3>
           <p class="text-secondary">
@@ -170,6 +171,7 @@
           </div>
         </section>
 
+        <!-- OFFLINE: Tasas -->
         <section class="card" id="offlineRatesCard" hidden>
           <h3>Tasas de referencia offline</h3>
           <p class="text-secondary">
@@ -189,79 +191,83 @@
             </table>
           </div>
         </section>
+      </div>
 
-        <section class="card card--skinny" id="outlookCard" data-online-only>
-          <div class="card-header">
-            <h3>Pronóstico inmediato</h3>
-            <p class="text-secondary">Proyección automática según tendencia semanal.</p>
-          </div>
-          <div id="outlookStatus" class="alert" role="status" hidden></div>
-          <ul class="outlook-list" id="outlookList" hidden></ul>
-        </section>
+      <!-- ONLINE: Pronóstico rápido -->
+      <section class="card card--skinny" id="outlookCard" data-online-only>
+        <div class="card-header">
+          <h3>Pronóstico inmediato</h3>
+          <p class="text-secondary">Proyección automática según tendencia semanal.</p>
+        </div>
+        <div id="outlookStatus" class="alert" role="status" hidden></div>
+        <ul class="outlook-list" id="outlookList" hidden></ul>
+      </section>
 
-        <section class="card card--skinny" id="momentumCard" data-online-only>
-          <div class="card-header">
-            <h3>Actualizaciones destacadas</h3>
-            <p class="text-secondary">Movimientos recientes en las monedas más consultadas.</p>
-          </div>
-          <div id="momentumStatus" class="alert" role="status" hidden></div>
-          <ul class="momentum-list" id="momentumList" hidden></ul>
-        </section>
+      <!-- ONLINE: Actualizaciones rápidas -->
+      <section class="card card--skinny" id="momentumCard" data-online-only>
+        <div class="card-header">
+          <h3>Actualizaciones destacadas</h3>
+          <p class="text-secondary">Movimientos recientes en las monedas más consultadas.</p>
+        </div>
+        <div id="momentumStatus" class="alert" role="status" hidden></div>
+        <ul class="momentum-list" id="momentumList" hidden></ul>
+      </section>
 
-        <section class="card card--medium" id="fluctuationCard" data-online-only>
-          <div class="card-header">
-            <h3>Variación semanal destacada</h3>
-            <p class="text-secondary">
-              Datos desde <span id="fluctuationRange"></span> basados en <strong>exchangerate.host</strong>.
+      <!-- ONLINE: Variación semanal (Exchangerate.host) -->
+      <section class="card card--medium" id="fluctuationCard" data-online-only>
+        <div class="card-header">
+          <h3>Variación semanal destacada</h3>
+          <p class="text-secondary">
+            Datos desde <span id="fluctuationRange"></span> basados en <strong>exchangerate.host</strong>.
+          </p>
+        </div>
+        <div id="fluctuationStatus" class="alert" role="status" hidden></div>
+        <div class="table-responsive" hidden>
+          <table class="table currency-table">
+            <thead>
+              <tr>
+                <th>Moneda</th>
+                <th>Cambio absoluto</th>
+                <th>Variación %</th>
+              </tr>
+            </thead>
+            <tbody id="fluctuationTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ONLINE: Serie histórica (Frankfurter) -->
+      <section class="card card--wide" id="timeseriesCard" data-online-only>
+        <div class="card-header">
+          <h3>Serie diaria Frankfurter</h3>
+          <p class="text-secondary">
+            Últimos valores publicados por el BCE vía Frankfurter. Incluye variación acumulada.
+          </p>
+        </div>
+        <div id="timeseriesStatus" class="alert" role="status" hidden></div>
+        <div class="timeseries-grid" hidden>
+          <section class="timeseries-summary">
+            <h4>Resumen USD → EUR</h4>
+            <p class="timeseries-delta">
+              Cambio absoluto: <span id="timeseriesDelta"></span>
             </p>
-          </div>
-          <div id="fluctuationStatus" class="alert" role="status" hidden></div>
-          <div class="table-responsive" hidden>
+            <p class="timeseries-delta">
+              Variación porcentual: <span id="timeseriesPercent"></span>
+            </p>
+          </section>
+          <div class="table-responsive">
             <table class="table currency-table">
               <thead>
                 <tr>
-                  <th>Moneda</th>
-                  <th>Cambio absoluto</th>
-                  <th>Variación %</th>
+                  <th>Fecha</th>
+                  <th>Tasa</th>
                 </tr>
               </thead>
-              <tbody id="fluctuationTable"></tbody>
+              <tbody id="timeseriesTable"></tbody>
             </table>
           </div>
-        </section>
-
-        <section class="card card--wide" id="timeseriesCard" data-online-only>
-          <div class="card-header">
-            <h3>Serie diaria Frankfurter</h3>
-            <p class="text-secondary">
-              Últimos valores publicados por el BCE vía Frankfurter. Incluye variación acumulada.
-            </p>
-          </div>
-          <div id="timeseriesStatus" class="alert" role="status" hidden></div>
-          <div class="timeseries-grid" hidden>
-            <section class="timeseries-summary">
-              <h4>Resumen USD → EUR</h4>
-              <p class="timeseries-delta">
-                Cambio absoluto: <span id="timeseriesDelta"></span>
-              </p>
-              <p class="timeseries-delta">
-                Variación porcentual: <span id="timeseriesPercent"></span>
-              </p>
-            </section>
-            <div class="table-responsive">
-              <table class="table currency-table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Tasa</th>
-                  </tr>
-                </thead>
-                <tbody id="timeseriesTable"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   </main>
 
