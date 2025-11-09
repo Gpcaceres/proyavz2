@@ -1,7 +1,7 @@
 // public/assets/js/currency.js
 (function () {
   document.addEventListener('DOMContentLoaded', () => {
-    // ---- DOM ----
+    // ---- DOM base (online) ----
     const form = document.getElementById('currencyForm');
     const fromSelect = document.getElementById('fromCurrency');
     const toSelect = document.getElementById('toCurrency');
@@ -18,7 +18,7 @@
     const baseCurrencyLabel = document.getElementById('baseCurrencyLabel');
     const onlineStatus = document.getElementById('onlineStatus');
 
-    // Online/Offline containers
+    // ---- Contenedores modo ----
     const onlineConverterSection = document.getElementById('onlineConverter');
     const onlineRatesCard = document.getElementById('onlineRatesCard');
     const currencyContainer = document.querySelector('.currency-container');
@@ -26,16 +26,15 @@
     const offlineSection = document.getElementById('offlineConverter');
     const offlineRatesCard = document.getElementById('offlineRatesCard');
 
-    // ÚNICO botón de modo (soporta dos posibles selectores)
+    // ÚNICO botón de modo + “slots” (online/offline)
     const modeToggleButton =
       document.getElementById('converterModeToggle') ||
       document.querySelector('[data-mode-toggle]');
-    // (Opcional) contenedor para “slotear” el botón en online/offline
     const modeToggleContainer = document.getElementById('converterMode');
     const onlineModeSlot = document.querySelector('[data-mode-slot="online"]');
     const offlineModeSlot = document.querySelector('[data-mode-slot="offline"]');
 
-    // Offline form/DOM
+    // ---- DOM offline ----
     const offlineForm = document.getElementById('offlineCurrencyForm');
     const offlineFromSelect = document.getElementById('offlineFromCurrency');
     const offlineToSelect = document.getElementById('offlineToCurrency');
@@ -48,7 +47,7 @@
     const offlineRatesUpdatedAt = document.getElementById('offlineRatesUpdatedAt');
     const offlineRatesTableBody = document.getElementById('offlineRates');
 
-    // (Opcional) tarjetas de fluctuación y serie histórica
+    // ---- Tarjetas opcionales (fluctuación y serie histórica) ----
     const fluctuationCard = document.getElementById('fluctuationCard');
     const fluctuationStatus = document.getElementById('fluctuationStatus');
     const fluctuationRangeLabel = document.getElementById('fluctuationRange');
@@ -64,7 +63,7 @@
 
     if (!form || !fromSelect || !toSelect) return;
 
-    // ---- Persistencia ----
+    // ---- Persistencia (keys) ----
     const STORAGE = {
       MODE: 'currencyMode', // 'online' | 'offline'
       FROM: 'currencyFrom',
@@ -102,10 +101,40 @@
     let offlineResultWasHidden = offlineResultSection ? offlineResultSection.hidden : true;
     let forcedOfflineByError = false;
 
-    // ---- Utilidades de fecha/estado (para módulos opcionales) ----
+    // ---- Constantes módulos opcionales ----
     const FLUCTUATION_SYMBOLS = ['EUR', 'GBP', 'MXN', 'COP'];
     const TIMESERIES_TARGET = 'EUR';
 
+    // Fallbacks para módulos opcionales (si las APIs fallan)
+    const FLUCTUATION_FALLBACK = {
+      start_date: '2024-05-01',
+      end_date: '2024-05-08',
+      base: 'USD',
+      rates: {
+        EUR: { change: 0.0124, change_pct: 1.36 },
+        GBP: { change: 0.0087, change_pct: 1.12 },
+        MXN: { change: -0.2141, change_pct: -1.23 },
+        COP: { change: -34.51, change_pct: -0.87 },
+      },
+    };
+    const TIMESERIES_FALLBACK = {
+      start: '2024-05-01',
+      end: '2024-05-08',
+      base: 'USD',
+      target: TIMESERIES_TARGET,
+      rates: {
+        '2024-05-01': { [TIMESERIES_TARGET]: 0.9210 },
+        '2024-05-02': { [TIMESERIES_TARGET]: 0.9235 },
+        '2024-05-03': { [TIMESERIES_TARGET]: 0.9258 },
+        '2024-05-06': { [TIMESERIES_TARGET]: 0.9281 },
+        '2024-05-07': { [TIMESERIES_TARGET]: 0.9264 },
+        '2024-05-08': { [TIMESERIES_TARGET]: 0.9276 },
+      },
+    };
+    let usedFluctuationFallback = false;
+    let usedTimeseriesFallback = false;
+
+    // ---- Utilidades ----
     function formatDateISO(date) {
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -113,7 +142,9 @@
       return `${y}-${m}-${d}`;
     }
     function formatDateDisplay(date) {
-      return date.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
+      return date.toLocaleDateString('es-EC', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      });
     }
     function updateStatus(element, message, type = 'info') {
       if (!element) return;
@@ -127,16 +158,12 @@
       element.textContent = message;
       element.hidden = false;
     }
-
-    // ---- Util: mover botón al slot correspondiente (opcional) ----
     function syncModeToggleSlot() {
       if (!modeToggleContainer) return;
       const targetSlot = isOfflineMode ? offlineModeSlot : onlineModeSlot;
       if (!targetSlot || targetSlot.contains(modeToggleContainer)) return;
       try { targetSlot.appendChild(modeToggleContainer); } catch {}
     }
-
-    // ---- Persistencia modo ----
     function saveMode() {
       try { localStorage.setItem(STORAGE.MODE, isOfflineMode ? 'offline' : 'online'); } catch {}
     }
@@ -148,8 +175,6 @@
       } catch {}
       return false; // por defecto online
     }
-
-    // ---- Persistencia selects ----
     function saveSelects() {
       try {
         if (fromSelect?.value) localStorage.setItem(STORAGE.FROM, fromSelect.value);
@@ -174,6 +199,33 @@
         if (sTo && offlineRatesMap.has(sTo)) offlineToSelect.value = sTo;
       } catch {}
     }
+    function getOfflineCurrencyInfo(code) {
+      const normalizedCode = String(code || '').toUpperCase();
+      return OFFLINE_DATA.currencies.find(c => String(c.code).toUpperCase() === normalizedCode);
+    }
+    function createOption(currency) {
+      const code = String(currency.code).toUpperCase();
+      const name = currency.name || code;
+      const symbol = currency.symbol ? String(currency.symbol) : '';
+      const option = document.createElement('option');
+      option.value = code;
+      option.textContent = symbol ? `${code} — ${name} (${symbol})` : `${code} — ${name}`;
+      return option;
+    }
+    function setOnlineFormDisabled(disabled) {
+      const elements = form.querySelectorAll('input, select, button');
+      elements.forEach((el) => { el.disabled = disabled; });
+    }
+    function showOnlineStatus(message) {
+      if (!onlineStatus) return;
+      if (message) {
+        onlineStatus.textContent = message;
+        onlineStatus.hidden = false;
+      } else {
+        onlineStatus.textContent = '';
+        onlineStatus.hidden = true;
+      }
+    }
 
     // ---- Modo Online/Offline ----
     function setConverterMode(offline) {
@@ -182,16 +234,15 @@
       if (currencyContainer) {
         currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
       }
-
-      // Online sections/cards
+      // Online
       if (onlineConverterSection) onlineConverterSection.hidden = isOfflineMode;
       if (onlineRatesCard) onlineRatesCard.hidden = isOfflineMode;
 
-      // Offline sections/cards
+      // Offline
       if (offlineSection) offlineSection.hidden = !isOfflineMode;
       if (offlineRatesCard) offlineRatesCard.hidden = !isOfflineMode;
 
-      // Result sections visibility memory
+      // Recordar visibilidad de resultados
       if (resultSection) {
         if (isOfflineMode) {
           onlineResultWasHidden = resultSection.hidden;
@@ -209,7 +260,7 @@
         }
       }
 
-      // Único botón: estado/ARIA/estilo
+      // Botón modo
       if (modeToggleButton) {
         modeToggleButton.setAttribute('aria-pressed', String(isOfflineMode));
         modeToggleButton.classList.toggle('is-offline', isOfflineMode);
@@ -220,41 +271,12 @@
         );
       }
 
-      // Slot opcional y persistir
+      // Tarjetas opcionales (solo online)
+      if (fluctuationCard) fluctuationCard.hidden = isOfflineMode;
+      if (timeseriesCard) timeseriesCard.hidden = isOfflineMode;
+
       syncModeToggleSlot();
       saveMode();
-    }
-
-    // ---- Utilidades ----
-    function getOfflineCurrencyInfo(code) {
-      const normalizedCode = String(code || '').toUpperCase();
-      return OFFLINE_DATA.currencies.find(c => String(c.code).toUpperCase() === normalizedCode);
-    }
-
-    function createOption(currency) {
-      const code = String(currency.code).toUpperCase();
-      const name = currency.name || code;
-      const symbol = currency.symbol ? String(currency.symbol) : '';
-      const option = document.createElement('option');
-      option.value = code;
-      option.textContent = symbol ? `${code} — ${name} (${symbol})` : `${code} — ${name}`;
-      return option;
-    }
-
-    function setOnlineFormDisabled(disabled) {
-      const elements = form.querySelectorAll('input, select, button');
-      elements.forEach((el) => { el.disabled = disabled; });
-    }
-
-    function showOnlineStatus(message) {
-      if (!onlineStatus) return;
-      if (message) {
-        onlineStatus.textContent = message;
-        onlineStatus.hidden = false;
-      } else {
-        onlineStatus.textContent = '';
-        onlineStatus.hidden = true;
-      }
     }
 
     // ---- Cargar tasas online ----
@@ -353,10 +375,10 @@
           if (fallback) toSelect.value = fallback;
         }
 
-        // Restaura lo guardado del usuario si existe
+        // Restaura lo guardado del usuario
         restoreOnlineSelects();
 
-        // Si veníamos forzados a offline por error, al tener datos volvemos a online.
+        // Si veníamos forzados a offline por error y ya hay datos, volvemos a online
         if (forcedOfflineByError) {
           forcedOfflineByError = false;
           setConverterMode(false);
@@ -589,7 +611,70 @@
       saveSelects();
     }
 
-    // ---- Fluctuación semanal (opcional) ----
+    // ---- Fluctuación semanal (con fallback) ----
+    function applyFluctuationRange(start, end) {
+      if (!fluctuationRangeLabel) return;
+      const startDate = start ? new Date(start) : null;
+      const endDate = end ? new Date(end) : null;
+      const formattedStart = startDate && !isNaN(startDate.getTime())
+        ? formatDateDisplay(startDate)
+        : (start || '');
+      const formattedEnd = endDate && !isNaN(endDate.getTime())
+        ? formatDateDisplay(endDate)
+        : (end || '');
+      if (!formattedStart && !formattedEnd) {
+        fluctuationRangeLabel.textContent = 'Últimos 7 días';
+        return;
+      }
+      if (!formattedEnd) {
+        fluctuationRangeLabel.textContent = formattedStart;
+        return;
+      }
+      fluctuationRangeLabel.textContent = `${formattedStart} — ${formattedEnd}`;
+    }
+    function renderFluctuationData(payload, { isFallback = false } = {}) {
+      if (!fluctuationTableBody) return;
+
+      const rates = payload?.rates;
+      if (!rates || typeof rates !== 'object') {
+        updateStatus(fluctuationStatus, 'Sin datos recientes para mostrar.', 'info');
+        return;
+      }
+
+      const entries = Object.entries(rates);
+      if (!entries.length) {
+        updateStatus(fluctuationStatus, 'Sin datos recientes para mostrar.', 'info');
+        return;
+      }
+
+      const startDate = payload.start_date || payload.startDate || payload.start;
+      const endDate = payload.end_date || payload.endDate || payload.end;
+      applyFluctuationRange(startDate, endDate);
+
+      fluctuationTableBody.innerHTML = '';
+      entries.forEach(([code, info]) => {
+        const change = Number(info?.change ?? 0);
+        const percent = Number(info?.change_pct ?? info?.changePercent ?? 0);
+        const row = document.createElement('tr');
+        const formattedChange = `${change >= 0 ? '+' : ''}${change.toFixed(4)}`;
+        const formattedPercent = `${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
+        row.innerHTML = `
+          <td>${code}</td>
+          <td>${formattedChange}</td>
+          <td>${formattedPercent}</td>
+        `;
+        fluctuationTableBody.appendChild(row);
+      });
+
+      if (fluctuationTableWrapper) {
+        fluctuationTableWrapper.hidden = false;
+      }
+
+      const fallbackMessage = isFallback
+        ? 'Mostrando variaciones con datos de referencia locales.'
+        : '';
+      updateStatus(fluctuationStatus, fallbackMessage, 'info');
+    }
     async function loadFluctuationData() {
       if (!fluctuationCard || !fluctuationTableBody) return;
 
@@ -603,9 +688,7 @@
       const startStr = formatDateISO(start);
       const endStr = formatDateISO(end);
 
-      if (fluctuationRangeLabel) {
-        fluctuationRangeLabel.textContent = `${formatDateDisplay(start)} — ${formatDateDisplay(end)}`;
-      }
+      applyFluctuationRange(startStr, endStr);
 
       const url = `https://api.exchangerate.host/fluctuation?start_date=${startStr}&end_date=${endStr}&base=USD&symbols=${FLUCTUATION_SYMBOLS.join(',')}`;
 
@@ -616,32 +699,14 @@
         if (data?.success === false || !data?.rates) {
           throw new Error('Respuesta inesperada de exchangerate.host');
         }
-
-        const entries = Object.entries(data.rates);
-        if (!entries.length) {
-          updateStatus(fluctuationStatus, 'Sin datos recientes para mostrar.', 'info');
-          return;
-        }
-
-        fluctuationTableBody.innerHTML = '';
-        entries.forEach(([code, info]) => {
-          const change = Number(info?.change ?? 0);
-          const percent = Number(info?.change_pct ?? 0);
-          const row = document.createElement('tr');
-          const formattedChange = `${change >= 0 ? '+' : ''}${change.toFixed(4)}`;
-          const formattedPercent = `${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
-          row.innerHTML = `
-            <td>${code}</td>
-            <td>${formattedChange}</td>
-            <td>${formattedPercent}</td>
-          `;
-          fluctuationTableBody.appendChild(row);
-        });
-
-        if (fluctuationTableWrapper) fluctuationTableWrapper.hidden = false;
-        updateStatus(fluctuationStatus, '', 'info');
+        renderFluctuationData(data);
       } catch (error) {
         console.error('Error cargando fluctuaciones', error);
+        if (!usedFluctuationFallback) {
+          usedFluctuationFallback = true;
+          renderFluctuationData(FLUCTUATION_FALLBACK, { isFallback: true });
+          return;
+        }
         updateStatus(
           fluctuationStatus,
           error.message || 'No se pudo calcular la variación semanal de monedas.',
@@ -650,7 +715,57 @@
       }
     }
 
-    // ---- Serie histórica (opcional) ----
+    // ---- Serie histórica (con fallback) ----
+    function renderTimeseriesData(payload, { isFallback = false } = {}) {
+      if (!timeseriesCard || !timeseriesTableBody || !timeseriesDeltaValue || !timeseriesPercentValue) return;
+
+      const rates = payload?.rates;
+      if (!rates || typeof rates !== 'object') {
+        updateStatus(timeseriesStatus, 'Sin datos históricos para mostrar.', 'info');
+        return;
+      }
+
+      const dates = Object.keys(rates).sort();
+      if (!dates.length) {
+        updateStatus(timeseriesStatus, 'Sin datos históricos para mostrar.', 'info');
+        return;
+      }
+
+      timeseriesTableBody.innerHTML = '';
+      dates.forEach((dateKey) => {
+        const rateValue = rates[dateKey]?.[TIMESERIES_TARGET];
+        if (typeof rateValue !== 'number') return;
+        const row = document.createElement('tr');
+        const day = new Date(dateKey);
+        row.innerHTML = `
+          <td>${isNaN(day.getTime()) ? dateKey : formatDateDisplay(day)}</td>
+          <td>${rateValue.toFixed(4)}</td>
+        `;
+        timeseriesTableBody.appendChild(row);
+      });
+
+      const firstRate = rates[dates[0]]?.[TIMESERIES_TARGET];
+      const lastRate = rates[dates[dates.length - 1]]?.[TIMESERIES_TARGET];
+
+      if (typeof firstRate === 'number' && typeof lastRate === 'number') {
+        const delta = lastRate - firstRate;
+        const percentChange = firstRate !== 0 ? (delta / firstRate) * 100 : 0;
+        const formattedDelta = `${delta >= 0 ? '+' : ''}${delta.toFixed(4)}`;
+        const formattedPercent = `${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%`;
+        timeseriesDeltaValue.textContent = formattedDelta;
+        timeseriesPercentValue.textContent = formattedPercent;
+      } else {
+        timeseriesDeltaValue.textContent = 'No disponible';
+        timeseriesPercentValue.textContent = 'No disponible';
+      }
+
+      if (timeseriesGrid) timeseriesGrid.hidden = false;
+
+      const fallbackMessage = isFallback
+        ? 'Mostrando serie histórica con datos de referencia locales.'
+        : '';
+      updateStatus(timeseriesStatus, fallbackMessage, 'info');
+    }
     async function loadTimeseriesData() {
       if (!timeseriesCard || !timeseriesTableBody || !timeseriesDeltaValue || !timeseriesPercentValue) return;
 
@@ -664,8 +779,8 @@
       const startStr = formatDateISO(start);
       const endStr = formatDateISO(end);
 
-      // Nota: este endpoint de Frankfurter permite histórico
-      const url = `https://api.frankfurter.dev/v1/timeseries?start=${startStr}&end=${endStr}&from=USD&to=${TIMESERIES_TARGET}`;
+      // Frankfurter oficial (histórico)
+      const url = `https://api.frankfurter.app/timeseries?start=${startStr}&end=${endStr}&from=USD&to=${TIMESERIES_TARGET}`;
 
       try {
         const response = await fetch(url);
@@ -674,42 +789,14 @@
         if (!data?.rates || typeof data.rates !== 'object') {
           throw new Error('Respuesta inesperada de Frankfurter');
         }
-
-        const dates = Object.keys(data.rates).sort();
-        if (!dates.length) {
-          updateStatus(timeseriesStatus, 'Sin datos históricos para mostrar.', 'info');
-          return;
-        }
-
-        timeseriesTableBody.innerHTML = '';
-        dates.forEach((dateKey) => {
-          const rateValue = data.rates[dateKey]?.[TIMESERIES_TARGET];
-          if (typeof rateValue !== 'number') return;
-          const row = document.createElement('tr');
-          const day = new Date(dateKey);
-          row.innerHTML = `
-            <td>${isNaN(day.getTime()) ? dateKey : formatDateDisplay(day)}</td>
-            <td>${rateValue.toFixed(4)}</td>
-          `;
-          timeseriesTableBody.appendChild(row);
-        });
-
-        const firstRate = data.rates[dates[0]]?.[TIMESERIES_TARGET];
-        const lastRate = data.rates[dates[dates.length - 1]]?.[TIMESERIES_TARGET];
-        if (typeof firstRate === 'number' && typeof lastRate === 'number') {
-          const delta = lastRate - firstRate;
-          const percentChange = firstRate !== 0 ? (delta / firstRate) * 100 : 0;
-          timeseriesDeltaValue.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(4)}`;
-          timeseriesPercentValue.textContent = `${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%`;
-        } else {
-          timeseriesDeltaValue.textContent = 'No disponible';
-          timeseriesPercentValue.textContent = 'No disponible';
-        }
-
-        if (timeseriesGrid) timeseriesGrid.hidden = false;
-        updateStatus(timeseriesStatus, '', 'info');
+        renderTimeseriesData(data);
       } catch (error) {
         console.error('Error cargando serie histórica', error);
+        if (!usedTimeseriesFallback) {
+          usedTimeseriesFallback = true;
+          renderTimeseriesData(TIMESERIES_FALLBACK, { isFallback: true });
+          return;
+        }
         updateStatus(
           timeseriesStatus,
           error.message || 'No se pudo mostrar la serie diaria de Frankfurter.',
@@ -725,8 +812,6 @@
         setConverterMode(!isOfflineMode);
       });
     }
-
-    // Guardar cambios de selects
     fromSelect?.addEventListener('change', saveSelects);
     toSelect?.addEventListener('change', saveSelects);
     offlineFromSelect?.addEventListener('change', saveSelects);
@@ -744,7 +829,6 @@
     // ---- Datos iniciales ----
     populateOfflineData();
     loadRates();
-    // Módulos opcionales
     loadFluctuationData();
     loadTimeseriesData();
   });

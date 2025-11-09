@@ -412,9 +412,7 @@ select { color: var(--text-primary); }
 .card-header p { margin: 0; }
 
 #fluctuationStatus,
-#timeseriesStatus {
-  margin-bottom: var(--spacing-md);
-}
+#timeseriesStatus { margin-bottom: var(--spacing-md); }
 
 .timeseries-grid {
   display: grid;
@@ -428,14 +426,8 @@ select { color: var(--text-primary); }
   backdrop-filter: blur(8px);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
-.timeseries-summary h4 {
-  margin-top: 0;
-  margin-bottom: var(--spacing-sm);
-}
-.timeseries-delta {
-  margin: 0 0 var(--spacing-sm) 0;
-  font-weight: 600;
-}
+.timeseries-summary h4 { margin-top: 0; margin-bottom: var(--spacing-sm); }
+.timeseries-delta { margin: 0 0 var(--spacing-sm) 0; font-weight: 600; }
 .timeseries-delta:last-of-type { margin-bottom: 0; }
 
 /* Media Queries */
