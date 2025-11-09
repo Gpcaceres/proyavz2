@@ -1,5 +1,5 @@
 // public/assets/js/currency.js
-(function(){
+(function () {
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('currencyForm');
     const fromSelect = document.getElementById('fromCurrency');
@@ -19,7 +19,10 @@
     const onlineRatesCard = document.getElementById('onlineRatesCard');
     const currencyContainer = document.querySelector('.currency-container');
     const modeToggleButton = document.getElementById('converterModeToggle');
-    const modeToggleLabel = document.getElementById('converterModeText');
+    // Unificado para compatibilidad con ambos diseños (status/hint o label simple)
+    const modeToggleStatus = document.getElementById('converterModeStatus'); // <strong>Modo …</strong>
+    const modeToggleHint = document.getElementById('converterModeHint');     // <small>hint…</small>
+    const modeToggleLabel = document.getElementById('converterModeText');    // span simple "Offline/En línea"
 
     const offlineSection = document.getElementById('offlineConverter');
     const offlineForm = document.getElementById('offlineCurrencyForm');
@@ -42,19 +45,19 @@
       updatedAt: '2024-01-15T00:00:00Z',
       base: { code: 'USD', name: 'Dólar estadounidense', symbol: '$' },
       currencies: [
-        { code: 'USD', name: 'Dólar estadounidense', symbol: '$', rate: 1.00 },
+        { code: 'USD', name: 'Dólar estadounidense', symbol: '$', rate: 1.0 },
         { code: 'EUR', name: 'Euro', symbol: '€', rate: 0.92 },
         { code: 'GBP', name: 'Libra esterlina', symbol: '£', rate: 0.79 },
-        { code: 'JPY', name: 'Yen japonés', symbol: '¥', rate: 146.50 },
+        { code: 'JPY', name: 'Yen japonés', symbol: '¥', rate: 146.5 },
         { code: 'CAD', name: 'Dólar canadiense', symbol: 'C$', rate: 1.34 },
         { code: 'AUD', name: 'Dólar australiano', symbol: 'A$', rate: 1.52 },
         { code: 'BRL', name: 'Real brasileño', symbol: 'R$', rate: 4.95 },
-        { code: 'CLP', name: 'Peso chileno', symbol: '$', rate: 890.00 },
-        { code: 'COP', name: 'Peso colombiano', symbol: '$', rate: 3925.00 },
-        { code: 'MXN', name: 'Peso mexicano', symbol: '$', rate: 17.10 },
-        { code: 'ARS', name: 'Peso argentino', symbol: '$', rate: 830.00 },
-        { code: 'PEN', name: 'Sol peruano', symbol: 'S/', rate: 3.70 }
-      ],
+        { code: 'CLP', name: 'Peso chileno', symbol: '$', rate: 890.0 },
+        { code: 'COP', name: 'Peso colombiano', symbol: '$', rate: 3925.0 },
+        { code: 'MXN', name: 'Peso mexicano', symbol: '$', rate: 17.1 },
+        { code: 'ARS', name: 'Peso argentino', symbol: '$', rate: 830.0 },
+        { code: 'PEN', name: 'Sol peruano', symbol: 'S/', rate: 3.7 }
+      ]
     };
 
     let currencyMap = new Map();
@@ -73,13 +76,8 @@
         currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
       }
 
-      if (onlineConverterSection) {
-        onlineConverterSection.hidden = isOfflineMode;
-      }
-
-      if (onlineRatesCard) {
-        onlineRatesCard.hidden = isOfflineMode;
-      }
+      if (onlineConverterSection) onlineConverterSection.hidden = isOfflineMode;
+      if (onlineRatesCard) onlineRatesCard.hidden = isOfflineMode;
 
       if (resultSection) {
         if (isOfflineMode) {
@@ -90,9 +88,7 @@
         }
       }
 
-      if (offlineSection) {
-        offlineSection.hidden = !isOfflineMode;
-      }
+      if (offlineSection) offlineSection.hidden = !isOfflineMode;
 
       if (offlineResultSection) {
         if (isOfflineMode) {
@@ -112,6 +108,13 @@
         );
       }
 
+      // Actualiza ambos tipos de UI si existen
+      if (modeToggleStatus) {
+        modeToggleStatus.textContent = isOfflineMode ? 'Modo offline' : 'Modo en línea';
+      }
+      if (modeToggleHint) {
+        modeToggleHint.textContent = isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline';
+      }
       if (modeToggleLabel) {
         modeToggleLabel.textContent = isOfflineMode ? 'Offline' : 'En línea';
       }
@@ -130,9 +133,7 @@
       const symbol = currency.symbol ? String(currency.symbol) : '';
       const option = document.createElement('option');
       option.value = code;
-      option.textContent = symbol
-        ? `${code} — ${name} (${symbol})`
-        : `${code} — ${name}`;
+      option.textContent = symbol ? `${code} — ${name} (${symbol})` : `${code} — ${name}`;
       return option;
     }
 
@@ -144,10 +145,7 @@
     }
 
     function showOnlineStatus(message) {
-      if (!onlineStatus) {
-        return;
-      }
-
+      if (!onlineStatus) return;
       if (message) {
         onlineStatus.textContent = message;
         onlineStatus.hidden = false;
@@ -166,9 +164,7 @@
           data = await api.listRates();
         } else {
           const response = await fetch('/api/currency/rates');
-          if (!response.ok) {
-            throw new Error('No se pudo obtener la lista de tasas');
-          }
+          if (!response.ok) throw new Error('No se pudo obtener la lista de tasas');
           data = await response.json();
         }
 
@@ -190,7 +186,7 @@
             code: String(currency.code).toUpperCase(),
             name: currency.name || currency.code,
             symbol: currency.symbol || '',
-            rate: Number(currency.rate),
+            rate: Number(currency.rate)
           };
 
           currencyMap.set(normalized.code, normalized);
@@ -213,15 +209,8 @@
           const baseName = typeof base === 'string' ? base : base?.name;
           const baseSymbol = typeof base === 'object' ? base?.symbol : undefined;
           let label = baseCode || 'USD';
-
-          if (baseName && baseName !== baseCode) {
-            label = `${baseCode} — ${baseName}`;
-          }
-
-          if (baseSymbol) {
-            label += ` (${baseSymbol})`;
-          }
-
+          if (baseName && baseName !== baseCode) label = `${baseCode} — ${baseName}`;
+          if (baseSymbol) label += ` (${baseSymbol})`;
           baseCurrencyLabel.textContent = label;
         }
 
@@ -246,9 +235,7 @@
             fromSelect.value = baseCode;
           } else {
             const first = currencyMap.keys().next().value;
-            if (first) {
-              fromSelect.value = first;
-            }
+            if (first) fromSelect.value = first;
           }
         }
 
@@ -256,9 +243,7 @@
           toSelect.value = preferredTo;
         } else {
           const fallback = Array.from(currencyMap.keys()).find((code) => code !== fromSelect.value);
-          if (fallback) {
-            toSelect.value = fallback;
-          }
+          if (fallback) toSelect.value = fallback;
         }
 
         if (forcedOfflineByError) {
@@ -325,7 +310,8 @@
         });
         resultValue.textContent = `${toSymbol ? `${toSymbol} ` : ''}${formattedAmount} ${conversion?.to?.code || to}`;
 
-        const rate = conversion?.rate || (conversion?.to?.amount / (conversion?.from?.amount || amount));
+        const rate =
+          conversion?.rate || conversion?.to?.amount / (conversion?.from?.amount || amount);
         const fromLabel = fromCurrency
           ? `${fromCurrency.code}${fromCurrency.symbol ? ` (${fromCurrency.symbol})` : ''}`
           : from;
@@ -338,14 +324,16 @@
         if (resultBaseAmount) {
           const baseInfo = conversion?.base || ratesData?.base || {};
           const baseCode = typeof baseInfo === 'string' ? baseInfo : baseInfo?.code;
-          const baseSymbol = typeof baseInfo === 'object' ? (baseInfo?.symbol || '') : '';
+          const baseSymbol = typeof baseInfo === 'object' ? baseInfo?.symbol || '' : '';
           if (conversion?.amountInBase != null && baseCode) {
             const formattedBase = Number(conversion.amountInBase).toLocaleString('es-EC', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2
             });
             const label = baseSymbol ? `${baseCode} (${baseSymbol})` : baseCode;
-            resultBaseAmount.textContent = `Equivalente en ${label}: ${baseSymbol ? `${baseSymbol} ` : ''}${formattedBase}`;
+            resultBaseAmount.textContent = `Equivalente en ${label}: ${
+              baseSymbol ? `${baseSymbol} ` : ''
+            }${formattedBase}`;
           } else {
             resultBaseAmount.textContent = '';
           }
@@ -370,7 +358,13 @@
     }
 
     function populateOfflineData() {
-      if (!offlineSection || !offlineForm || !offlineFromSelect || !offlineToSelect || !offlineRatesTableBody) {
+      if (
+        !offlineSection ||
+        !offlineForm ||
+        !offlineFromSelect ||
+        !offlineToSelect ||
+        !offlineRatesTableBody
+      ) {
         return;
       }
 
@@ -405,7 +399,9 @@
         offlineFromSelect.value = String(OFFLINE_DATA.base.code).toUpperCase();
       }
 
-      const defaultTarget = Array.from(offlineRatesMap.keys()).find((code) => code !== offlineFromSelect.value);
+      const defaultTarget = Array.from(offlineRatesMap.keys()).find(
+        (code) => code !== offlineFromSelect.value
+      );
       if (defaultTarget) {
         offlineToSelect.value = defaultTarget;
       }
@@ -421,7 +417,13 @@
     function handleOfflineConversion(event) {
       event.preventDefault();
 
-      if (!offlineFromSelect || !offlineToSelect || !offlineAmountInput || !offlineResultValue || !offlineResultRate) {
+      if (
+        !offlineFromSelect ||
+        !offlineToSelect ||
+        !offlineAmountInput ||
+        !offlineResultValue ||
+        !offlineResultRate
+      ) {
         return;
       }
 
@@ -447,11 +449,12 @@
 
       const amountInBase = fromRate > 0 ? amount / fromRate : 0;
       const convertedAmount = amountInBase * toRate;
-      const rate = amount > 0 ? convertedAmount / amount : (from === to ? 1 : toRate / fromRate);
+      const rate = amount > 0 ? convertedAmount / amount : from === to ? 1 : toRate / fromRate;
 
       const fromSymbol = fromCurrency.symbol || '';
       const toSymbol = toCurrency.symbol || '';
-      const baseInfo = getOfflineCurrencyInfo(OFFLINE_DATA.base?.code || 'USD') || OFFLINE_DATA.base || {};
+      const baseInfo =
+        getOfflineCurrencyInfo(OFFLINE_DATA.base?.code || 'USD') || OFFLINE_DATA.base || {};
       const baseSymbol = baseInfo.symbol || '';
       const baseCode = baseInfo.code || 'USD';
 
@@ -460,14 +463,18 @@
         maximumFractionDigits: 2
       });
       offlineResultValue.textContent = `${toSymbol ? `${toSymbol} ` : ''}${formattedToAmount} ${to}`;
-      offlineResultRate.textContent = `1 ${from}${fromSymbol ? ` (${fromSymbol})` : ''} = ${rate.toFixed(4)} ${to}${toSymbol ? ` (${toSymbol})` : ''}`;
+      offlineResultRate.textContent = `1 ${from}${
+        fromSymbol ? ` (${fromSymbol})` : ''
+      } = ${rate.toFixed(4)} ${to}${toSymbol ? ` (${toSymbol})` : ''}`;
 
       if (offlineResultBaseAmount) {
         const formattedBase = amountInBase.toLocaleString('es-EC', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
         });
-        offlineResultBaseAmount.textContent = `Equivalente en ${baseCode}${baseSymbol ? ` (${baseSymbol})` : ''}: ${baseSymbol ? `${baseSymbol} ` : ''}${formattedBase}`;
+        offlineResultBaseAmount.textContent = `Equivalente en ${baseCode}${
+          baseSymbol ? ` (${baseSymbol})` : ''
+        }: ${baseSymbol ? `${baseSymbol} ` : ''}${formattedBase}`;
       }
 
       if (offlineResultUpdated) {

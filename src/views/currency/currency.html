@@ -23,20 +23,24 @@
     </div>
   </header>
 
-  <main class="container currency-container">
+  <main class="container currency-container" data-mode="online">
     <div class="currency-mode-toggle" id="converterMode">
+      <!-- Etiqueta corta (usada por JS si existe) -->
       <span class="currency-mode-toggle__label" id="converterModeText">En línea</span>
+
+      <!-- Botón estilo “mode-toggle” (compatible con CSS y JS actuales) -->
       <button
         type="button"
-        class="toggle-switch"
+        class="mode-toggle"
         id="converterModeToggle"
         aria-pressed="false"
         aria-label="Cambiar a modo offline"
       >
-        <span class="toggle-switch__track">
-          <span class="toggle-switch__thumb"></span>
+        <span class="mode-toggle__indicator" aria-hidden="true"></span>
+        <span class="mode-toggle__text">
+          <strong id="converterModeStatus">Modo en línea</strong>
+          <small id="converterModeHint">Cambiar a modo offline</small>
         </span>
-        <span class="visually-hidden">Alternar entre el conversor en línea y offline</span>
       </button>
     </div>
 
