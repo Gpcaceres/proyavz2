@@ -1,15 +1,18 @@
 // public/assets/js/currency.js
 (function () {
   document.addEventListener('DOMContentLoaded', () => {
+    // ---- DOM ----
     const form = document.getElementById('currencyForm');
     const fromSelect = document.getElementById('fromCurrency');
     const toSelect = document.getElementById('toCurrency');
     const amountInput = document.getElementById('amount');
+
     const resultSection = document.getElementById('conversionResult');
     const resultValue = document.getElementById('convertedAmount');
     const resultRate = document.getElementById('conversionRate');
     const resultBaseAmount = document.getElementById('conversionBaseAmount');
     const resultUpdated = document.getElementById('conversionUpdatedAt');
+
     const ratesTableBody = document.getElementById('currencyRates');
     const ratesUpdatedAt = document.getElementById('ratesUpdatedAt');
     const baseCurrencyLabel = document.getElementById('baseCurrencyLabel');
@@ -19,10 +22,9 @@
     const onlineRatesCard = document.getElementById('onlineRatesCard');
     const currencyContainer = document.querySelector('.currency-container');
 
-    // Compatibilidad: un botón único o varios elementos con data-mode-toggle
+    // Toggle(s) – soporta uno o varios
     const modeToggleButton = document.getElementById('converterModeToggle');
     const modeToggleButtons = document.querySelectorAll('[data-mode-toggle]');
-    // Soporte para las dos variantes de UI de texto
     const modeToggleStatus = document.getElementById('converterModeStatus'); // <strong>Modo…</strong>
     const modeToggleHint = document.getElementById('converterModeHint');     // <small>…</small>
     const modeToggleLabel = document.getElementById('converterModeText');    // "Offline/En línea"
@@ -42,6 +44,16 @@
 
     if (!form || !fromSelect || !toSelect) return;
 
+    // ---- Persistencia ----
+    const STORAGE = {
+      MODE: 'currencyMode',             // 'online' | 'offline'
+      FROM: 'currencyFrom',
+      TO: 'currencyTo',
+      OFF_FROM: 'currencyOffFrom',
+      OFF_TO: 'currencyOffTo',
+    };
+
+    // ---- Datos offline de respaldo ----
     const OFFLINE_DATA = {
       updatedAt: '2024-01-15T00:00:00Z',
       base: { code: 'USD', name: 'Dólar estadounidense', symbol: '$' },
@@ -61,6 +73,7 @@
       ]
     };
 
+    // ---- Estado ----
     let currencyMap = new Map();
     let ratesData = null;
     const offlineRatesMap = new Map();
@@ -69,6 +82,7 @@
     let offlineResultWasHidden = offlineResultSection ? offlineResultSection.hidden : true;
     let forcedOfflineByError = false;
 
+    // ---- Helpers UI ----
     function updateModeToggleUI() {
       const setAttrs = (el) => {
         el.setAttribute('aria-pressed', String(isOfflineMode));
@@ -78,15 +92,10 @@
           isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline'
         );
       };
-
-      // Botón único
       if (modeToggleButton) setAttrs(modeToggleButton);
-      // Varios toggles
       if (modeToggleButtons && modeToggleButtons.length) {
         modeToggleButtons.forEach(setAttrs);
       }
-
-      // Textos opcionales
       if (modeToggleStatus) {
         modeToggleStatus.textContent = isOfflineMode ? 'Modo offline' : 'Modo en línea';
       }
@@ -98,61 +107,9 @@
       }
     }
 
-    function setConverterMode(offline) {
-      isOfflineMode = Boolean(offline);
-
-      if (currencyContainer) {
-        currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
-      }
-
-      if (onlineConverterSection) onlineConverterSection.hidden = isOfflineMode;
-      if (onlineRatesCard) onlineRatesCard.hidden = isOfflineMode;
-
-      if (resultSection) {
-        if (isOfflineMode) {
-          onlineResultWasHidden = resultSection.hidden;
-          resultSection.hidden = true;
-        } else {
-          resultSection.hidden = onlineResultWasHidden;
-        }
-      }
-
-      if (offlineSection) offlineSection.hidden = !isOfflineMode;
-
-      if (offlineResultSection) {
-        if (isOfflineMode) {
-          offlineResultSection.hidden = offlineResultWasHidden;
-        } else {
-          offlineResultWasHidden = offlineResultSection.hidden;
-          offlineResultSection.hidden = true;
-        }
-      }
-
-      updateModeToggleUI();
-    }
-
-    function getOfflineCurrencyInfo(code) {
-      const normalizedCode = String(code || '').toUpperCase();
-      return OFFLINE_DATA.currencies.find(
-        (currency) => String(currency.code).toUpperCase() === normalizedCode
-      );
-    }
-
-    function createOption(currency) {
-      const code = String(currency.code).toUpperCase();
-      const name = currency.name || code;
-      const symbol = currency.symbol ? String(currency.symbol) : '';
-      const option = document.createElement('option');
-      option.value = code;
-      option.textContent = symbol ? `${code} — ${name} (${symbol})` : `${code} — ${name}`;
-      return option;
-    }
-
     function setOnlineFormDisabled(disabled) {
       const elements = form.querySelectorAll('input, select, button');
-      elements.forEach((element) => {
-        element.disabled = disabled;
-      });
+      elements.forEach((el) => { el.disabled = disabled; });
     }
 
     function showOnlineStatus(message) {
@@ -166,6 +123,96 @@
       }
     }
 
+    // ---- Persistencia modo ----
+    function saveMode() {
+      try { localStorage.setItem(STORAGE.MODE, isOfflineMode ? 'offline' : 'online'); } catch {}
+    }
+    function loadSavedMode() {
+      try {
+        const m = localStorage.getItem(STORAGE.MODE);
+        if (m === 'offline') return true;
+        if (m === 'online') return false;
+      } catch {}
+      return false; // por defecto online
+    }
+
+    // ---- Persistencia selects ----
+    function saveSelects() {
+      try {
+        if (fromSelect?.value) localStorage.setItem(STORAGE.FROM, fromSelect.value);
+        if (toSelect?.value) localStorage.setItem(STORAGE.TO, toSelect.value);
+        if (offlineFromSelect?.value) localStorage.setItem(STORAGE.OFF_FROM, offlineFromSelect.value);
+        if (offlineToSelect?.value) localStorage.setItem(STORAGE.OFF_TO, offlineToSelect.value);
+      } catch {}
+    }
+    function restoreOnlineSelects() {
+      try {
+        const sFrom = localStorage.getItem(STORAGE.FROM);
+        const sTo = localStorage.getItem(STORAGE.TO);
+        if (sFrom && currencyMap.has(sFrom)) fromSelect.value = sFrom;
+        if (sTo && currencyMap.has(sTo)) toSelect.value = sTo;
+      } catch {}
+    }
+    function restoreOfflineSelects() {
+      try {
+        const sFrom = localStorage.getItem(STORAGE.OFF_FROM);
+        const sTo = localStorage.getItem(STORAGE.OFF_TO);
+        if (sFrom && offlineRatesMap.has(sFrom)) offlineFromSelect.value = sFrom;
+        if (sTo && offlineRatesMap.has(sTo)) offlineToSelect.value = sTo;
+      } catch {}
+    }
+
+    // ---- Modo Online/Offline ----
+    function setConverterMode(offline) {
+      isOfflineMode = Boolean(offline);
+
+      // Contenedor y secciones
+      if (currencyContainer) {
+        currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
+      }
+      if (onlineConverterSection) onlineConverterSection.hidden = isOfflineMode;
+      if (onlineRatesCard) onlineRatesCard.hidden = isOfflineMode;
+
+      // Resultados visibles/ocultos por modo
+      if (resultSection) {
+        if (isOfflineMode) {
+          onlineResultWasHidden = resultSection.hidden;
+          resultSection.hidden = true;
+        } else {
+          resultSection.hidden = onlineResultWasHidden;
+        }
+      }
+      if (offlineSection) offlineSection.hidden = !isOfflineMode;
+      if (offlineResultSection) {
+        if (isOfflineMode) {
+          offlineResultSection.hidden = offlineResultWasHidden;
+        } else {
+          offlineResultWasHidden = offlineResultSection.hidden;
+          offlineResultSection.hidden = true;
+        }
+      }
+
+      updateModeToggleUI();
+      saveMode();
+    }
+
+    // ---- Utilidades ----
+    function getOfflineCurrencyInfo(code) {
+      const normalizedCode = String(code || '').toUpperCase();
+      return OFFLINE_DATA.currencies.find(c => String(c.code).toUpperCase() === normalizedCode);
+    }
+
+    function createOption(currency) {
+      const code = String(currency.code).toUpperCase();
+      const name = currency.name || code;
+      const symbol = currency.symbol ? String(currency.symbol) : '';
+      const option = document.createElement('option');
+      option.value = code;
+      option.textContent = symbol ? `${code} — ${name} (${symbol})` : `${code} — ${name}`;
+      return option;
+    }
+
+    // ---- Cargar tasas online ----
     async function loadRates() {
       try {
         const api = globalThis.CurrencyAPI;
@@ -199,7 +246,6 @@
             symbol: currency.symbol || '',
             rate: Number(currency.rate)
           };
-
           currencyMap.set(normalized.code, normalized);
           fromSelect.appendChild(createOption(normalized));
           toSelect.appendChild(createOption(normalized));
@@ -214,6 +260,7 @@
           ratesTableBody.appendChild(row);
         });
 
+        // Etiqueta base
         if (baseCurrencyLabel) {
           const base = data.base;
           const baseCode = typeof base === 'string' ? base : base?.code;
@@ -225,6 +272,7 @@
           baseCurrencyLabel.textContent = label;
         }
 
+        // Fecha de actualización
         if (data.updatedAt) {
           const updated = new Date(data.updatedAt);
           ratesUpdatedAt.textContent = isNaN(updated.getTime())
@@ -234,6 +282,7 @@
           ratesUpdatedAt.textContent = 'No disponible';
         }
 
+        // Defaults
         const defaults = data.defaults || {};
         const preferredFrom = String(defaults.from || '').toUpperCase();
         const preferredTo = String(defaults.to || '').toUpperCase();
@@ -257,6 +306,10 @@
           if (fallback) toSelect.value = fallback;
         }
 
+        // Restaura lo guardado del usuario si existe
+        restoreOnlineSelects();
+
+        // Si veníamos forzados a offline por error, al tener datos volvemos a online.
         if (forcedOfflineByError) {
           forcedOfflineByError = false;
           setConverterMode(false);
@@ -272,10 +325,11 @@
         showOnlineStatus(error.message || 'La API de conversión no está disponible en este momento.');
         setOnlineFormDisabled(true);
         forcedOfflineByError = true;
-        setConverterMode(true);
+        setConverterMode(true); // caemos a offline
       }
     }
 
+    // ---- Convertir (online) ----
     async function convertCurrency(event) {
       event.preventDefault();
 
@@ -342,9 +396,7 @@
               maximumFractionDigits: 2
             });
             const label = baseSymbol ? `${baseCode} (${baseSymbol})` : baseCode;
-            resultBaseAmount.textContent = `Equivalente en ${label}: ${
-              baseSymbol ? `${baseSymbol} ` : ''
-            }${formattedBase}`;
+            resultBaseAmount.textContent = `Equivalente en ${label}: ${baseSymbol ? `${baseSymbol} ` : ''}${formattedBase}`;
           } else {
             resultBaseAmount.textContent = '';
           }
@@ -363,21 +415,15 @@
         onlineResultWasHidden = false;
         resultSection.classList.add('highlight');
         setTimeout(() => resultSection.classList.remove('highlight'), 600);
+        saveSelects();
       } catch (error) {
         alert(error.message || 'No se pudo convertir la moneda.');
       }
     }
 
+    // ---- Poblar Offline ----
     function populateOfflineData() {
-      if (
-        !offlineSection ||
-        !offlineForm ||
-        !offlineFromSelect ||
-        !offlineToSelect ||
-        !offlineRatesTableBody
-      ) {
-        return;
-      }
+      if (!offlineSection || !offlineForm || !offlineFromSelect || !offlineToSelect || !offlineRatesTableBody) return;
 
       offlineFromSelect.innerHTML = '<option value="" disabled selected>Selecciona moneda</option>';
       offlineToSelect.innerHTML = '<option value="" disabled selected>Selecciona moneda</option>';
@@ -423,18 +469,16 @@
           ? OFFLINE_DATA.updatedAt
           : updated.toLocaleString('es-EC');
       }
+
+      // Restaura últimas selecciones offline si existen
+      restoreOfflineSelects();
     }
 
+    // ---- Convertir Offline ----
     function handleOfflineConversion(event) {
       event.preventDefault();
 
-      if (
-        !offlineFromSelect ||
-        !offlineToSelect ||
-        !offlineAmountInput ||
-        !offlineResultValue ||
-        !offlineResultRate
-      ) {
+      if (!offlineFromSelect || !offlineToSelect || !offlineAmountInput || !offlineResultValue || !offlineResultRate) {
         return;
       }
 
@@ -464,28 +508,21 @@
 
       const fromSymbol = fromCurrency.symbol || '';
       const toSymbol = toCurrency.symbol || '';
-      const baseInfo =
-        getOfflineCurrencyInfo(OFFLINE_DATA.base?.code || 'USD') || OFFLINE_DATA.base || {};
+      const baseInfo = getOfflineCurrencyInfo(OFFLINE_DATA.base?.code || 'USD') || OFFLINE_DATA.base || {};
       const baseSymbol = baseInfo.symbol || '';
       const baseCode = baseInfo.code || 'USD';
 
       const formattedToAmount = convertedAmount.toLocaleString('es-EC', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        minimumFractionDigits: 2, maximumFractionDigits: 2
       });
       offlineResultValue.textContent = `${toSymbol ? `${toSymbol} ` : ''}${formattedToAmount} ${to}`;
-      offlineResultRate.textContent = `1 ${from}${
-        fromSymbol ? ` (${fromSymbol})` : ''
-      } = ${rate.toFixed(4)} ${to}${toSymbol ? ` (${toSymbol})` : ''}`;
+      offlineResultRate.textContent = `1 ${from}${fromSymbol ? ` (${fromSymbol})` : ''} = ${rate.toFixed(4)} ${to}${toSymbol ? ` (${toSymbol})` : ''}`;
 
       if (offlineResultBaseAmount) {
         const formattedBase = amountInBase.toLocaleString('es-EC', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
+          minimumFractionDigits: 2, maximumFractionDigits: 2
         });
-        offlineResultBaseAmount.textContent = `Equivalente en ${baseCode}${
-          baseSymbol ? ` (${baseSymbol})` : ''
-        }: ${baseSymbol ? `${baseSymbol} ` : ''}${formattedBase}`;
+        offlineResultBaseAmount.textContent = `Equivalente en ${baseCode}${baseSymbol ? ` (${baseSymbol})` : ''}: ${baseSymbol ? `${baseSymbol} ` : ''}${formattedBase}`;
       }
 
       if (offlineResultUpdated) {
@@ -501,9 +538,11 @@
         offlineResultSection.classList.add('highlight');
         setTimeout(() => offlineResultSection.classList.remove('highlight'), 600);
       }
+
+      saveSelects();
     }
 
-    // Listeners para toggle (soporta 1 o varios)
+    // ---- Listeners de toggle ----
     if (modeToggleButton) {
       modeToggleButton.addEventListener('click', () => {
         forcedOfflineByError = false;
@@ -519,16 +558,21 @@
       });
     }
 
-    // Estado inicial
-    setConverterMode(false);
+    // Guardar cambios de selects
+    fromSelect?.addEventListener('change', saveSelects);
+    toSelect?.addEventListener('change', saveSelects);
+    offlineFromSelect?.addEventListener('change', saveSelects);
+    offlineToSelect?.addEventListener('change', saveSelects);
 
-    // Listeners de formularios
+    // ---- Estado inicial ----
+    const initialOffline = loadSavedMode();
+    setConverterMode(initialOffline);
+
+    // ---- Formularios ----
     form.addEventListener('submit', convertCurrency);
-    if (offlineForm) {
-      offlineForm.addEventListener('submit', handleOfflineConversion);
-    }
+    if (offlineForm) offlineForm.addEventListener('submit', handleOfflineConversion);
 
-    // Datos iniciales
+    // ---- Datos iniciales ----
     populateOfflineData();
     loadRates();
   });

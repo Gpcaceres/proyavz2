@@ -24,11 +24,9 @@
   </header>
 
   <main class="container currency-container" data-mode="online">
+    <!-- Toggle principal (compatible con 1 botón + varios [data-mode-toggle]) -->
     <div class="currency-mode-toggle" id="converterMode">
-      <!-- Etiqueta corta (usada por JS si existe) -->
       <span class="currency-mode-toggle__label" id="converterModeText">En línea</span>
-
-      <!-- Botón estilo “mode-toggle” (compatible con CSS y JS actuales) -->
       <button
         type="button"
         class="mode-toggle"
@@ -44,13 +42,29 @@
       </button>
     </div>
 
+    <!-- ONLINE -->
     <section class="card" id="onlineConverter">
-      <h2 class="text-gradient">Conversor de divisas en línea</h2>
-      <p class="text-secondary">Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.</p>
+      <div class="currency-card__header">
+        <div class="currency-card__title">
+          <h2 class="text-gradient">Conversor de divisas en línea</h2>
+          <p class="text-secondary">
+            Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="mode-toggle"
+          data-mode-toggle
+          aria-pressed="false"
+          aria-label="Cambiar a modo offline"
+        >
+          ON
+        </button>
+      </div>
 
       <div id="onlineStatus" class="alert alert-error" hidden></div>
 
-      <form id="currencyForm" class="currency-form">
+      <form id="currencyForm" class="currency-form" autocomplete="off" novalidate>
         <div class="currency-form__mode">
           <button
             type="button"
@@ -72,7 +86,16 @@
         </div>
         <div class="form-group">
           <label for="amount">Monto</label>
-          <input id="amount" name="amount" type="number" min="0" step="0.01" placeholder="Ej: 150.00" required />
+          <input
+            id="amount"
+            name="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Ej: 150.00"
+            required
+          />
         </div>
         <button type="submit" class="btn btn-primary">Convertir</button>
       </form>
@@ -88,7 +111,10 @@
 
     <section class="card" id="onlineRatesCard">
       <h3>Tasas disponibles</h3>
-      <p class="text-secondary">Valores obtenidos de <strong id="baseCurrencyLabel">USD</strong>. Última actualización: <span id="ratesUpdatedAt"></span></p>
+      <p class="text-secondary">
+        Valores obtenidos de <strong id="baseCurrencyLabel">USD</strong>.
+        Última actualización: <span id="ratesUpdatedAt"></span>
+      </p>
       <div class="table-responsive">
         <table class="table currency-table">
           <thead>
@@ -104,11 +130,27 @@
       </div>
     </section>
 
+    <!-- OFFLINE -->
     <section class="card" id="offlineConverter" hidden>
-      <h2>Conversor offline</h2>
-      <p class="text-secondary">Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.</p>
+      <div class="currency-card__header">
+        <div class="currency-card__title">
+          <h2>Conversor offline</h2>
+          <p class="text-secondary">
+            Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="mode-toggle"
+          data-mode-toggle
+          aria-pressed="true"
+          aria-label="Cambiar a modo en línea"
+        >
+          OF
+        </button>
+      </div>
 
-      <form id="offlineCurrencyForm" class="currency-form">
+      <form id="offlineCurrencyForm" class="currency-form" autocomplete="off" novalidate>
         <div class="currency-form__mode">
           <button
             type="button"
@@ -130,7 +172,16 @@
         </div>
         <div class="form-group">
           <label for="offlineAmount">Monto</label>
-          <input id="offlineAmount" name="amount" type="number" min="0" step="0.01" placeholder="Ej: 150.00" required />
+          <input
+            id="offlineAmount"
+            name="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="Ej: 150.00"
+            required
+          />
         </div>
         <button type="submit" class="btn">Convertir offline</button>
       </form>
@@ -144,7 +195,9 @@
       </section>
 
       <h3>Tasas de referencia offline</h3>
-      <p class="text-secondary">Datos con última actualización: <span id="offlineRatesUpdatedAt"></span></p>
+      <p class="text-secondary">
+        Datos con última actualización: <span id="offlineRatesUpdatedAt"></span>
+      </p>
       <div class="table-responsive">
         <table class="table currency-table">
           <thead>
@@ -166,6 +219,12 @@
       <small>Conversor de moneda para viajeros - Datos simulados para demostración.</small>
     </div>
   </footer>
+
+  <noscript>
+    <div class="container basic-itinerary" style="margin-top:1rem">
+      <strong>Este conversor requiere JavaScript.</strong>
+    </div>
+  </noscript>
 
   <script src="/assets/js/layout.js"></script>
   <script src="/assets/js/auth-api.js"></script>
