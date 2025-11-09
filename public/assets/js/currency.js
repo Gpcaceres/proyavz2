@@ -22,15 +22,12 @@
     const onlineRatesCard = document.getElementById('onlineRatesCard');
     const currencyContainer = document.querySelector('.currency-container');
 
-    // Toggle(s) – soporta uno o varios
-    const modeToggleButton = document.getElementById('converterModeToggle'); // botón principal
-    const modeToggleButtons = document.querySelectorAll('[data-mode-toggle]'); // botones secundarios
-    const modeToggleStatus = document.getElementById('converterModeStatus'); // <strong>…</strong>
-    const modeToggleHint   = document.getElementById('converterModeHint');   // <small>…</small>
-    const modeToggleLabel  = document.getElementById('converterModeText');   // "Offline/En línea"
+    // ÚNICO botón de modo
+    const modeToggleButton = document.getElementById('converterModeToggle') || document.querySelector('[data-mode-toggle]');
 
     // Offline
     const offlineSection = document.getElementById('offlineConverter');
+
     const offlineForm = document.getElementById('offlineCurrencyForm');
     const offlineFromSelect = document.getElementById('offlineFromCurrency');
     const offlineToSelect = document.getElementById('offlineToCurrency');
@@ -83,45 +80,46 @@
     let offlineResultWasHidden = offlineResultSection ? offlineResultSection.hidden : true;
     let forcedOfflineByError = false;
 
-    // ---- Helpers UI ----
-    function updateModeToggleUI() {
-      const setAttrs = (el) => {
-        el.setAttribute('aria-pressed', String(isOfflineMode));
-        el.classList.toggle('is-offline', isOfflineMode);
-        el.setAttribute(
+    // ---- Modo Online/Offline ----
+    function setConverterMode(offline) {
+      isOfflineMode = Boolean(offline);
+
+      if (currencyContainer) {
+        currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
+      }
+      if (onlineConverterSection) onlineConverterSection.hidden = isOfflineMode;
+      if (onlineRatesCard) onlineRatesCard.hidden = isOfflineMode;
+      if (offlineSection) offlineSection.hidden = !isOfflineMode;
+
+      if (resultSection) {
+        if (isOfflineMode) {
+          onlineResultWasHidden = resultSection.hidden;
+          resultSection.hidden = true;
+        } else {
+          resultSection.hidden = onlineResultWasHidden;
+        }
+      }
+      if (offlineResultSection) {
+        if (isOfflineMode) {
+          offlineResultSection.hidden = offlineResultWasHidden;
+        } else {
+          offlineResultWasHidden = offlineResultSection.hidden;
+          offlineResultSection.hidden = true;
+        }
+      }
+
+      // Único botón
+      if (modeToggleButton) {
+        modeToggleButton.setAttribute('aria-pressed', String(isOfflineMode));
+        modeToggleButton.classList.toggle('is-offline', isOfflineMode);
+        modeToggleButton.textContent = isOfflineMode ? 'OF' : 'ON';
+        modeToggleButton.setAttribute(
           'aria-label',
           isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline'
         );
-      };
-      if (modeToggleButton) setAttrs(modeToggleButton);
-      if (modeToggleButtons && modeToggleButtons.length) {
-        modeToggleButtons.forEach(setAttrs);
       }
-      if (modeToggleStatus) {
-        modeToggleStatus.textContent = isOfflineMode ? 'Modo offline' : 'Modo en línea';
-      }
-      if (modeToggleHint) {
-        modeToggleHint.textContent = isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline';
-      }
-      if (modeToggleLabel) {
-        modeToggleLabel.textContent = isOfflineMode ? 'Offline' : 'En línea';
-      }
-    }
 
-    function setOnlineFormDisabled(disabled) {
-      const elements = form.querySelectorAll('input, select, button');
-      elements.forEach((el) => { el.disabled = disabled; });
-    }
-
-    function showOnlineStatus(message) {
-      if (!onlineStatus) return;
-      if (message) {
-        onlineStatus.textContent = message;
-        onlineStatus.hidden = false;
-      } else {
-        onlineStatus.textContent = '';
-        onlineStatus.hidden = true;
-      }
+      saveMode();
     }
 
     // ---- Persistencia modo ----
@@ -161,40 +159,6 @@
         if (sFrom && offlineRatesMap.has(sFrom)) offlineFromSelect.value = sFrom;
         if (sTo && offlineRatesMap.has(sTo)) offlineToSelect.value = sTo;
       } catch {}
-    }
-
-    // ---- Modo Online/Offline ----
-    function setConverterMode(offline) {
-      isOfflineMode = Boolean(offline);
-
-      // Contenedor y secciones
-      if (currencyContainer) {
-        currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
-      }
-      if (onlineConverterSection) onlineConverterSection.hidden = isOfflineMode;
-      if (onlineRatesCard) onlineRatesCard.hidden = isOfflineMode;
-
-      // Resultados visibles/ocultos por modo
-      if (resultSection) {
-        if (isOfflineMode) {
-          onlineResultWasHidden = resultSection.hidden;
-          resultSection.hidden = true;
-        } else {
-          resultSection.hidden = onlineResultWasHidden;
-        }
-      }
-      if (offlineSection) offlineSection.hidden = !isOfflineMode;
-      if (offlineResultSection) {
-        if (isOfflineMode) {
-          offlineResultSection.hidden = offlineResultWasHidden;
-        } else {
-          offlineResultWasHidden = offlineResultSection.hidden;
-          offlineResultSection.hidden = true;
-        }
-      }
-
-      updateModeToggleUI();
-      saveMode();
     }
 
     // ---- Utilidades ----
@@ -327,6 +291,22 @@
         setOnlineFormDisabled(true);
         forcedOfflineByError = true;
         setConverterMode(true); // caemos a offline
+      }
+    }
+
+    function setOnlineFormDisabled(disabled) {
+      const elements = form.querySelectorAll('input, select, button');
+      elements.forEach((el) => { el.disabled = disabled; });
+    }
+
+    function showOnlineStatus(message) {
+      if (!onlineStatus) return;
+      if (message) {
+        onlineStatus.textContent = message;
+        onlineStatus.hidden = false;
+      } else {
+        onlineStatus.textContent = '';
+        onlineStatus.hidden = true;
       }
     }
 
@@ -543,19 +523,11 @@
       saveSelects();
     }
 
-    // ---- Listeners de toggle ----
+    // ---- Listeners ----
     if (modeToggleButton) {
       modeToggleButton.addEventListener('click', () => {
         forcedOfflineByError = false;
         setConverterMode(!isOfflineMode);
-      });
-    }
-    if (modeToggleButtons && modeToggleButtons.length) {
-      modeToggleButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-          forcedOfflineByError = false;
-          setConverterMode(!isOfflineMode);
-        });
       });
     }
 

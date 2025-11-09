@@ -24,9 +24,8 @@
   </header>
 
   <main class="container currency-container" data-mode="online">
-    <!-- Toggle principal (compatible con 1 botón + varios [data-mode-toggle]) -->
+    <!-- ÚNICO botón ON/OF -->
     <div class="currency-mode-toggle" id="converterMode">
-      <span class="currency-mode-toggle__label" id="converterModeText">En línea</span>
       <button
         type="button"
         class="mode-toggle"
@@ -34,48 +33,22 @@
         aria-pressed="false"
         aria-label="Cambiar a modo offline"
       >
-        <span class="mode-toggle__indicator" aria-hidden="true"></span>
-        <span class="mode-toggle__text">
-          <strong id="converterModeStatus">Modo en línea</strong>
-          <small id="converterModeHint">Cambiar a modo offline</small>
-        </span>
+        ON
       </button>
     </div>
 
-    <!-- ONLINE -->
+    <!-- ONLINE: Conversión -->
     <section class="card" id="onlineConverter">
       <div class="currency-card__header">
         <div class="currency-card__title">
           <h2 class="text-gradient">Conversor de divisas en línea</h2>
-          <p class="text-secondary">
-            Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.
-          </p>
+          <p class="text-secondary">Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.</p>
         </div>
-        <button
-          type="button"
-          class="mode-toggle"
-          data-mode-toggle
-          aria-pressed="false"
-          aria-label="Cambiar a modo offline"
-        >
-          ON
-        </button>
       </div>
 
       <div id="onlineStatus" class="alert alert-error" hidden></div>
 
       <form id="currencyForm" class="currency-form" autocomplete="off" novalidate>
-        <div class="currency-form__mode">
-          <button
-            type="button"
-            class="mode-toggle"
-            data-mode-toggle
-            aria-pressed="false"
-            aria-label="Cambiar a modo offline"
-          >
-            ON
-          </button>
-        </div>
         <div class="form-group">
           <label for="fromCurrency">Moneda origen</label>
           <select id="fromCurrency" name="from" required></select>
@@ -109,6 +82,7 @@
       <small id="conversionUpdatedAt" class="text-muted"></small>
     </section>
 
+    <!-- ONLINE: Tasas -->
     <section class="card" id="onlineRatesCard">
       <h3>Tasas disponibles</h3>
       <p class="text-secondary">
@@ -130,38 +104,16 @@
       </div>
     </section>
 
-    <!-- OFFLINE -->
+    <!-- OFFLINE: Conversión -->
     <section class="card" id="offlineConverter" hidden>
       <div class="currency-card__header">
         <div class="currency-card__title">
           <h2>Conversor offline</h2>
-          <p class="text-secondary">
-            Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.
-          </p>
+          <p class="text-secondary">Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.</p>
         </div>
-        <button
-          type="button"
-          class="mode-toggle"
-          data-mode-toggle
-          aria-pressed="true"
-          aria-label="Cambiar a modo en línea"
-        >
-          OF
-        </button>
       </div>
 
       <form id="offlineCurrencyForm" class="currency-form" autocomplete="off" novalidate>
-        <div class="currency-form__mode">
-          <button
-            type="button"
-            class="mode-toggle"
-            data-mode-toggle
-            aria-pressed="true"
-            aria-label="Cambiar a modo en línea"
-          >
-            OF
-          </button>
-        </div>
         <div class="form-group">
           <label for="offlineFromCurrency">Moneda origen</label>
           <select id="offlineFromCurrency" name="from" required></select>
@@ -193,7 +145,10 @@
         <p id="offlineConversionBaseAmount" class="text-secondary"></p>
         <small id="offlineConversionUpdatedAt" class="text-muted"></small>
       </section>
+    </section>
 
+    <!-- OFFLINE: Tasas -->
+    <section class="card" id="offlineRatesCard" hidden>
       <h3>Tasas de referencia offline</h3>
       <p class="text-secondary">
         Datos con última actualización: <span id="offlineRatesUpdatedAt"></span>
