@@ -23,12 +23,13 @@
     const currencyContainer = document.querySelector('.currency-container');
 
     // Toggle(s) – soporta uno o varios
-    const modeToggleButton = document.getElementById('converterModeToggle');
-    const modeToggleButtons = document.querySelectorAll('[data-mode-toggle]');
-    const modeToggleStatus = document.getElementById('converterModeStatus'); // <strong>Modo…</strong>
-    const modeToggleHint = document.getElementById('converterModeHint');     // <small>…</small>
-    const modeToggleLabel = document.getElementById('converterModeText');    // "Offline/En línea"
+    const modeToggleButton = document.getElementById('converterModeToggle'); // botón principal
+    const modeToggleButtons = document.querySelectorAll('[data-mode-toggle]'); // botones secundarios
+    const modeToggleStatus = document.getElementById('converterModeStatus'); // <strong>…</strong>
+    const modeToggleHint   = document.getElementById('converterModeHint');   // <small>…</small>
+    const modeToggleLabel  = document.getElementById('converterModeText');   // "Offline/En línea"
 
+    // Offline
     const offlineSection = document.getElementById('offlineConverter');
     const offlineForm = document.getElementById('offlineCurrencyForm');
     const offlineFromSelect = document.getElementById('offlineFromCurrency');
@@ -282,7 +283,7 @@
           ratesUpdatedAt.textContent = 'No disponible';
         }
 
-        // Defaults
+        // Defaults de la API
         const defaults = data.defaults || {};
         const preferredFrom = String(defaults.from || '').toUpperCase();
         const preferredTo = String(defaults.to || '').toUpperCase();
