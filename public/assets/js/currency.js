@@ -18,11 +18,14 @@
     const onlineConverterSection = document.getElementById('onlineConverter');
     const onlineRatesCard = document.getElementById('onlineRatesCard');
     const currencyContainer = document.querySelector('.currency-container');
+
+    // Compatibilidad: un botón único o varios elementos con data-mode-toggle
     const modeToggleButton = document.getElementById('converterModeToggle');
-    // Unificado para compatibilidad con ambos diseños (status/hint o label simple)
-    const modeToggleStatus = document.getElementById('converterModeStatus'); // <strong>Modo …</strong>
-    const modeToggleHint = document.getElementById('converterModeHint');     // <small>hint…</small>
-    const modeToggleLabel = document.getElementById('converterModeText');    // span simple "Offline/En línea"
+    const modeToggleButtons = document.querySelectorAll('[data-mode-toggle]');
+    // Soporte para las dos variantes de UI de texto
+    const modeToggleStatus = document.getElementById('converterModeStatus'); // <strong>Modo…</strong>
+    const modeToggleHint = document.getElementById('converterModeHint');     // <small>…</small>
+    const modeToggleLabel = document.getElementById('converterModeText');    // "Offline/En línea"
 
     const offlineSection = document.getElementById('offlineConverter');
     const offlineForm = document.getElementById('offlineCurrencyForm');
@@ -37,9 +40,7 @@
     const offlineRatesUpdatedAt = document.getElementById('offlineRatesUpdatedAt');
     const offlineRatesTableBody = document.getElementById('offlineRates');
 
-    if (!form || !fromSelect || !toSelect) {
-      return;
-    }
+    if (!form || !fromSelect || !toSelect) return;
 
     const OFFLINE_DATA = {
       updatedAt: '2024-01-15T00:00:00Z',
@@ -68,9 +69,37 @@
     let offlineResultWasHidden = offlineResultSection ? offlineResultSection.hidden : true;
     let forcedOfflineByError = false;
 
+    function updateModeToggleUI() {
+      const setAttrs = (el) => {
+        el.setAttribute('aria-pressed', String(isOfflineMode));
+        el.classList.toggle('is-offline', isOfflineMode);
+        el.setAttribute(
+          'aria-label',
+          isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline'
+        );
+      };
+
+      // Botón único
+      if (modeToggleButton) setAttrs(modeToggleButton);
+      // Varios toggles
+      if (modeToggleButtons && modeToggleButtons.length) {
+        modeToggleButtons.forEach(setAttrs);
+      }
+
+      // Textos opcionales
+      if (modeToggleStatus) {
+        modeToggleStatus.textContent = isOfflineMode ? 'Modo offline' : 'Modo en línea';
+      }
+      if (modeToggleHint) {
+        modeToggleHint.textContent = isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline';
+      }
+      if (modeToggleLabel) {
+        modeToggleLabel.textContent = isOfflineMode ? 'Offline' : 'En línea';
+      }
+    }
+
     function setConverterMode(offline) {
-      const shouldGoOffline = Boolean(offline);
-      isOfflineMode = shouldGoOffline;
+      isOfflineMode = Boolean(offline);
 
       if (currencyContainer) {
         currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
@@ -99,25 +128,7 @@
         }
       }
 
-      if (modeToggleButton) {
-        modeToggleButton.setAttribute('aria-pressed', String(isOfflineMode));
-        modeToggleButton.classList.toggle('is-offline', isOfflineMode);
-        modeToggleButton.setAttribute(
-          'aria-label',
-          isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline'
-        );
-      }
-
-      // Actualiza ambos tipos de UI si existen
-      if (modeToggleStatus) {
-        modeToggleStatus.textContent = isOfflineMode ? 'Modo offline' : 'Modo en línea';
-      }
-      if (modeToggleHint) {
-        modeToggleHint.textContent = isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline';
-      }
-      if (modeToggleLabel) {
-        modeToggleLabel.textContent = isOfflineMode ? 'Offline' : 'En línea';
-      }
+      updateModeToggleUI();
     }
 
     function getOfflineCurrencyInfo(code) {
@@ -449,7 +460,7 @@
 
       const amountInBase = fromRate > 0 ? amount / fromRate : 0;
       const convertedAmount = amountInBase * toRate;
-      const rate = amount > 0 ? convertedAmount / amount : from === to ? 1 : toRate / fromRate;
+      const rate = amount > 0 ? convertedAmount / amount : (from === to ? 1 : toRate / fromRate);
 
       const fromSymbol = fromCurrency.symbol || '';
       const toSymbol = toCurrency.symbol || '';
@@ -492,20 +503,32 @@
       }
     }
 
+    // Listeners para toggle (soporta 1 o varios)
     if (modeToggleButton) {
       modeToggleButton.addEventListener('click', () => {
         forcedOfflineByError = false;
         setConverterMode(!isOfflineMode);
       });
     }
+    if (modeToggleButtons && modeToggleButtons.length) {
+      modeToggleButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          forcedOfflineByError = false;
+          setConverterMode(!isOfflineMode);
+        });
+      });
+    }
 
+    // Estado inicial
     setConverterMode(false);
 
+    // Listeners de formularios
     form.addEventListener('submit', convertCurrency);
     if (offlineForm) {
       offlineForm.addEventListener('submit', handleOfflineConversion);
     }
 
+    // Datos iniciales
     populateOfflineData();
     loadRates();
   });

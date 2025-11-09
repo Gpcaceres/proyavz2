@@ -51,6 +51,17 @@
       <div id="onlineStatus" class="alert alert-error" hidden></div>
 
       <form id="currencyForm" class="currency-form">
+        <div class="currency-form__mode">
+          <button
+            type="button"
+            class="mode-toggle"
+            data-mode-toggle
+            aria-pressed="false"
+            aria-label="Cambiar a modo offline"
+          >
+            ON
+          </button>
+        </div>
         <div class="form-group">
           <label for="fromCurrency">Moneda origen</label>
           <select id="fromCurrency" name="from" required></select>
@@ -98,6 +109,17 @@
       <p class="text-secondary">Si la API no está disponible, utiliza este conversor con tasas de referencia almacenadas localmente.</p>
 
       <form id="offlineCurrencyForm" class="currency-form">
+        <div class="currency-form__mode">
+          <button
+            type="button"
+            class="mode-toggle"
+            data-mode-toggle
+            aria-pressed="true"
+            aria-label="Cambiar a modo en línea"
+          >
+            OF
+          </button>
+        </div>
         <div class="form-group">
           <label for="offlineFromCurrency">Moneda origen</label>
           <select id="offlineFromCurrency" name="from" required></select>
