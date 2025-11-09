@@ -164,6 +164,40 @@ nav a[href*="itinerary"]::before{content:'📋 '}
 .dashboard-column--primary .card,.dashboard-column--insights .card{margin-bottom:0}
 .dashboard-column--insights{position:sticky;top:var(--spacing-xl);z-index:2}
 
+.currency-layout{display:grid;gap:var(--spacing-xl);grid-template-columns:minmax(0,1.75fr) minmax(0,.95fr);align-items:start}
+.currency-layout__primary{display:grid;gap:var(--spacing-xl);grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"converter converter" "result rates"}
+.currency-layout__converter{grid-area:converter;display:grid;gap:var(--spacing-xl)}
+.currency-layout__converter .card{margin-bottom:0}
+.currency-layout__rates{grid-area:rates;display:grid;gap:var(--spacing-xl)}
+.currency-layout__rates .card{margin-bottom:0}
+.currency-layout__primary #conversionResult{grid-area:result;margin-bottom:0}
+.currency-layout__insights{display:grid;gap:var(--spacing-xl);position:sticky;top:calc(var(--spacing-xl) + 4.5rem)}
+.currency-layout__insights .card{margin-bottom:0}
+.currency-layout__insights-stack{display:grid;gap:var(--spacing-xl)}
+.currency-layout__analytics{margin-top:var(--spacing-2xl);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--spacing-xl);align-items:start}
+.currency-layout__analytics .card{margin-bottom:0}
+
+@media (max-width:1200px){
+  .currency-layout{grid-template-columns:minmax(0,1.35fr) minmax(0,.85fr)}
+}
+
+@media (max-width:1024px){
+  .currency-layout{grid-template-columns:1fr}
+  .currency-layout__insights{position:static}
+  .currency-layout__analytics{grid-template-columns:1fr;margin-top:var(--spacing-xl)}
+}
+
+@media (max-width:768px){
+  .currency-layout__primary{grid-template-columns:1fr;grid-template-areas:"converter" "result" "rates"}
+  .currency-layout__insights-stack{gap:var(--spacing-lg)}
+}
+
+@media (max-width:576px){
+  .currency-layout{gap:var(--spacing-lg)}
+  .currency-layout__primary{gap:var(--spacing-lg)}
+  .currency-layout__insights{gap:var(--spacing-lg)}
+}
+
 /* Analíticas */
 .analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--spacing-lg);margin-top:var(--spacing-xl);align-items:stretch}
 .card--monitor{background:linear-gradient(180deg,rgba(78,205,196,.12),rgba(255,255,255,.92))}
