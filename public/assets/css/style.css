@@ -276,6 +276,102 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
     overflow: hidden;
 }
 
+.currency-container[data-mode="offline"] #onlineConverter,
+.currency-container[data-mode="offline"] #onlineRatesCard {
+    display: none;
+}
+
+.currency-container[data-mode="online"] #offlineConverter,
+.currency-container[data-mode="online"] #offlineRatesCard {
+    display: none;
+}
+
+.currency-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.currency-card__title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    flex: 1;
+}
+
+
+.currency-container {
+    position: relative;
+}
+
+.currency-form {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.currency-mode-toggle {
+    position: static;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--spacing-lg);
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+}
+
+.mode-toggle {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.45rem 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: var(--text-light);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    min-width: 3.75rem;
+    text-align: center;
+    flex-shrink: 0;
+    position: static;
+    margin-left: auto;
+}
+
+.mode-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.25);
+}
+
+.mode-toggle:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.65);
+    outline-offset: 3px;
+}
+
+.mode-toggle.is-offline {
+    background: linear-gradient(135deg, var(--accent-dark), var(--primary-dark));
+}
+
+@media (max-width: 768px) {
+    .currency-card__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+
+    .currency-mode-toggle {
+        justify-content: flex-end;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .mode-toggle {
+        padding: 0.4rem 1rem;
+    }
+}
+
 .card::before {
     content: '';
     position: absolute;
