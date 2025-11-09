@@ -164,6 +164,7 @@ nav a[href*="itinerary"]::before{content:'📋 '}
 .dashboard-column--primary .card,.dashboard-column--insights .card{margin-bottom:0}
 .dashboard-column--insights{position:sticky;top:var(--spacing-xl);z-index:2}
 
+/* === Versión final sin conflictos: grid principal === */
 .currency-grid{display:grid;gap:var(--spacing-xl);align-items:start;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"converter result monitor" "rates outlook monitor" "fluctuation timeseries momentum"}
 .currency-grid__converter{grid-area:converter;display:grid;gap:var(--spacing-xl)}
 .currency-grid__rates{grid-area:rates;display:grid;gap:var(--spacing-xl)}
