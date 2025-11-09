@@ -24,7 +24,7 @@
   </header>
 
   <main class="container currency-container" data-mode="online">
-    <!-- ÚNICO botón ON/OF, embebido y sin flotar -->
+    <!-- ÚNICO botón ON/OF -->
     <div class="currency-mode-toggle" id="converterMode">
       <button
         type="button"
@@ -85,7 +85,10 @@
     <!-- ONLINE: Tasas -->
     <section class="card" id="onlineRatesCard">
       <h3>Tasas disponibles</h3>
-      <p class="text-secondary">Valores obtenidos de <strong id="baseCurrencyLabel">USD</strong>. Última actualización: <span id="ratesUpdatedAt"></span></p>
+      <p class="text-secondary">
+        Valores obtenidos de <strong id="baseCurrencyLabel">USD</strong>.
+        Última actualización: <span id="ratesUpdatedAt"></span>
+      </p>
       <div class="table-responsive">
         <table class="table currency-table">
           <thead>
@@ -101,7 +104,7 @@
       </div>
     </section>
 
-    <!-- OFFLINE: Conversión (mismo modelo) -->
+    <!-- OFFLINE: Conversión -->
     <section class="card" id="offlineConverter" hidden>
       <div class="currency-card__header">
         <div class="currency-card__title">
@@ -144,10 +147,12 @@
       </section>
     </section>
 
-    <!-- OFFLINE: Tasas (separado, igual que online) -->
+    <!-- OFFLINE: Tasas -->
     <section class="card" id="offlineRatesCard" hidden>
       <h3>Tasas de referencia offline</h3>
-      <p class="text-secondary">Datos con última actualización: <span id="offlineRatesUpdatedAt"></span></p>
+      <p class="text-secondary">
+        Datos con última actualización: <span id="offlineRatesUpdatedAt"></span>
+      </p>
       <div class="table-responsive">
         <table class="table currency-table">
           <thead>
