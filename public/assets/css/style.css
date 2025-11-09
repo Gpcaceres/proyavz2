@@ -276,6 +276,102 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
     overflow: hidden;
 }
 
+.currency-container {
+    position: relative;
+    padding-top: calc(var(--spacing-2xl) + 1.5rem);
+}
+
+.currency-mode-toggle {
+    position: absolute;
+    top: var(--spacing-xl);
+    right: var(--spacing-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    z-index: 5;
+}
+
+.currency-mode-toggle__label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+}
+
+.toggle-switch {
+    position: relative;
+    width: 56px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.toggle-switch:focus-visible {
+    outline: 3px solid rgba(74, 144, 226, 0.45);
+    outline-offset: 3px;
+    border-radius: 999px;
+}
+
+.toggle-switch__track {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--surface);
+    border-radius: 999px;
+    border: 2px solid var(--text-primary);
+    position: relative;
+    transition: var(--transition-fast);
+}
+
+.toggle-switch__thumb {
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    transition: var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.toggle-switch.is-offline .toggle-switch__thumb {
+    left: calc(100% - 4px - 20px);
+}
+
+.toggle-switch.is-offline .toggle-switch__track {
+    border-color: var(--accent-dark);
+}
+
+.currency-container[data-mode="offline"] .currency-mode-toggle__label {
+    color: var(--accent-dark);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 768px) {
+    .currency-mode-toggle {
+        position: static;
+        justify-content: flex-end;
+        margin-bottom: var(--spacing-lg);
+    }
+}
+
 .card::before {
     content: '';
     position: absolute;
