@@ -15,7 +15,12 @@
     const baseCurrencyLabel = document.getElementById('baseCurrencyLabel');
     const onlineStatus = document.getElementById('onlineStatus');
 
+    const onlineConverterSection = document.getElementById('onlineConverter');
+    const onlineRatesCard = document.getElementById('onlineRatesCard');
+    const currencyContainer = document.querySelector('.currency-container');
     const offlineSection = document.getElementById('offlineConverter');
+    const modeToggleButton = document.getElementById('modeToggle');
+
     const offlineForm = document.getElementById('offlineCurrencyForm');
     const offlineFromSelect = document.getElementById('offlineFromCurrency');
     const offlineToSelect = document.getElementById('offlineToCurrency');
@@ -54,6 +59,59 @@
     let currencyMap = new Map();
     let ratesData = null;
     const offlineRatesMap = new Map();
+    let isOfflineMode = false;
+    let onlineResultWasHidden = resultSection ? resultSection.hidden : true;
+    let offlineResultWasHidden = offlineResultSection ? offlineResultSection.hidden : true;
+    let forcedOfflineByError = false;
+
+    function setConverterMode(offline) {
+      const shouldGoOffline = Boolean(offline);
+      isOfflineMode = shouldGoOffline;
+
+      if (currencyContainer) {
+        currencyContainer.setAttribute('data-mode', isOfflineMode ? 'offline' : 'online');
+      }
+
+      if (onlineConverterSection) {
+        onlineConverterSection.hidden = isOfflineMode;
+      }
+
+      if (onlineRatesCard) {
+        onlineRatesCard.hidden = isOfflineMode;
+      }
+
+      if (resultSection) {
+        if (isOfflineMode) {
+          onlineResultWasHidden = resultSection.hidden;
+          resultSection.hidden = true;
+        } else {
+          resultSection.hidden = onlineResultWasHidden;
+        }
+      }
+
+      if (offlineSection) {
+        offlineSection.hidden = !isOfflineMode;
+      }
+
+      if (offlineResultSection) {
+        if (isOfflineMode) {
+          offlineResultSection.hidden = offlineResultWasHidden;
+        } else {
+          offlineResultWasHidden = offlineResultSection.hidden;
+          offlineResultSection.hidden = true;
+        }
+      }
+
+      if (modeToggleButton) {
+        modeToggleButton.setAttribute('aria-pressed', String(isOfflineMode));
+        modeToggleButton.classList.toggle('is-offline', isOfflineMode);
+        modeToggleButton.textContent = isOfflineMode ? 'OF' : 'ON';
+        modeToggleButton.setAttribute(
+          'aria-label',
+          isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline'
+        );
+      }
+    }
 
     function getOfflineCurrencyInfo(code) {
       const normalizedCode = String(code || '').toUpperCase();
@@ -198,6 +256,11 @@
             toSelect.value = fallback;
           }
         }
+
+        if (forcedOfflineByError) {
+          forcedOfflineByError = false;
+          setConverterMode(false);
+        }
       } catch (error) {
         console.error('Error cargando tasas', error);
         ratesData = null;
@@ -208,6 +271,8 @@
         ratesUpdatedAt.textContent = 'No disponible';
         showOnlineStatus(error.message || 'La API de conversión no está disponible en este momento.');
         setOnlineFormDisabled(true);
+        forcedOfflineByError = true;
+        setConverterMode(true);
       }
     }
 
@@ -292,6 +357,7 @@
         }
 
         resultSection.hidden = false;
+        onlineResultWasHidden = false;
         resultSection.classList.add('highlight');
         setTimeout(() => resultSection.classList.remove('highlight'), 600);
       } catch (error) {
@@ -409,10 +475,20 @@
 
       if (offlineResultSection) {
         offlineResultSection.hidden = false;
+        offlineResultWasHidden = false;
         offlineResultSection.classList.add('highlight');
         setTimeout(() => offlineResultSection.classList.remove('highlight'), 600);
       }
     }
+
+    if (modeToggleButton) {
+      modeToggleButton.addEventListener('click', () => {
+        forcedOfflineByError = false;
+        setConverterMode(!isOfflineMode);
+      });
+    }
+
+    setConverterMode(false);
 
     form.addEventListener('submit', convertCurrency);
     if (offlineForm) {

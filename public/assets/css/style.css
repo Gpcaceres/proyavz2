@@ -276,6 +276,89 @@ nav a[href*="itinerary"]:before { content: '📋 '; }
     overflow: hidden;
 }
 
+.currency-container[data-mode="offline"] #onlineConverter,
+.currency-container[data-mode="offline"] #onlineRatesCard {
+    display: none;
+}
+
+.currency-container[data-mode="online"] #offlineConverter {
+    display: none;
+}
+
+.currency-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.currency-card__title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    flex: 1;
+}
+
+
+.currency-container {
+    position: relative;
+    padding-top: calc(var(--spacing-2xl) + 1.5rem);
+}
+
+.currency-form {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.mode-toggle {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.45rem 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: var(--text-light);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    min-width: 3.75rem;
+    text-align: center;
+    flex-shrink: 0;
+    position: absolute;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+}
+
+.mode-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.25);
+}
+
+.mode-toggle:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.65);
+    outline-offset: 3px;
+}
+
+.mode-toggle.is-offline {
+    background: linear-gradient(135deg, var(--accent-dark), var(--primary-dark));
+}
+
+@media (max-width: 768px) {
+    .currency-card__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+
+    .mode-toggle {
+        top: var(--spacing-md);
+        right: var(--spacing-md);
+        padding: 0.4rem 1rem;
+    }
+}
+
 .card::before {
     content: '';
     position: absolute;
