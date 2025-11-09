@@ -23,7 +23,27 @@
     </div>
   </header>
 
-  <main class="container currency-container">
+  <main class="container currency-container" data-mode="online">
+    <div class="currency-mode-toggle" id="converterMode">
+      <!-- Etiqueta corta (usada por JS si existe) -->
+      <span class="currency-mode-toggle__label" id="converterModeText">En línea</span>
+
+      <!-- Botón estilo “mode-toggle” (compatible con CSS y JS actuales) -->
+      <button
+        type="button"
+        class="mode-toggle"
+        id="converterModeToggle"
+        aria-pressed="false"
+        aria-label="Cambiar a modo offline"
+      >
+        <span class="mode-toggle__indicator" aria-hidden="true"></span>
+        <span class="mode-toggle__text">
+          <strong id="converterModeStatus">Modo en línea</strong>
+          <small id="converterModeHint">Cambiar a modo offline</small>
+        </span>
+      </button>
+    </div>
+
     <section class="card" id="onlineConverter">
       <h2 class="text-gradient">Conversor de divisas en línea</h2>
       <p class="text-secondary">Consulta tasas actualizadas en tiempo real utilizando la API pública de Frankfurter.</p>
