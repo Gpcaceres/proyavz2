@@ -23,8 +23,12 @@
     </div>
   </header>
 
-  <main class="container currency-container">
+  <main class="container currency-container" data-mode="online">
     <div class="currency-mode-toggle" id="converterMode">
+      <!-- Etiqueta corta (usada por JS si existe) -->
+      <span class="currency-mode-toggle__label" id="converterModeText">En línea</span>
+
+      <!-- Botón estilo “mode-toggle” (compatible con CSS y JS actuales) -->
       <button
         type="button"
         class="mode-toggle"
