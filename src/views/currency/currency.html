@@ -77,6 +77,14 @@
             </div>
             <button type="submit" class="btn btn-primary">Convertir</button>
           </form>
+
+          <section id="conversionResult" class="conversion-result" hidden>
+            <h3>Resultado</h3>
+            <p class="conversion-value" id="convertedAmount"></p>
+            <p id="conversionRate" class="text-secondary"></p>
+            <p id="conversionBaseAmount" class="text-secondary"></p>
+            <small id="conversionUpdatedAt" class="text-muted"></small>
+          </section>
         </section>
 
         <!-- OFFLINE: Conversión (mismo modelo) -->
@@ -125,14 +133,6 @@
           </section>
         </section>
       </div>
-
-      <section id="conversionResult" class="card conversion-result" hidden>
-        <h3>Resultado</h3>
-        <p class="conversion-value" id="convertedAmount"></p>
-        <p id="conversionRate" class="text-secondary"></p>
-        <p id="conversionBaseAmount" class="text-secondary"></p>
-        <small id="conversionUpdatedAt" class="text-muted"></small>
-      </section>
 
       <!-- ONLINE: Monitor en tiempo real -->
       <section class="card card--monitor" id="liveRateCard" data-online-only>
