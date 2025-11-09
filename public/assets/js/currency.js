@@ -21,11 +21,15 @@
     const onlineConverterSection = document.getElementById('onlineConverter');
     const onlineRatesCard = document.getElementById('onlineRatesCard');
     const currencyContainer = document.querySelector('.currency-container');
-    const offlineSection = document.getElementById('offlineConverter');
-    const modeToggleButton = document.querySelector('[data-mode-toggle]');
-    const onlineToggleSlot = onlineConverterSection?.querySelector('[data-mode-toggle-slot="online"]') || null;
-    const offlineToggleSlot = offlineSection?.querySelector('[data-mode-toggle-slot="offline"]') || null;
 
+    // Toggle(s) – soporta uno o varios
+    const modeToggleButton = document.getElementById('converterModeToggle');
+    const modeToggleButtons = document.querySelectorAll('[data-mode-toggle]');
+    const modeToggleStatus = document.getElementById('converterModeStatus'); // <strong>Modo…</strong>
+    const modeToggleHint = document.getElementById('converterModeHint');     // <small>…</small>
+    const modeToggleLabel = document.getElementById('converterModeText');    // "Offline/En línea"
+
+    const offlineSection = document.getElementById('offlineConverter');
     const offlineForm = document.getElementById('offlineCurrencyForm');
     const offlineFromSelect = document.getElementById('offlineFromCurrency');
     const offlineToSelect = document.getElementById('offlineToCurrency');
@@ -78,6 +82,29 @@
     let offlineResultWasHidden = offlineResultSection ? offlineResultSection.hidden : true;
     let forcedOfflineByError = false;
 
+    // ---- Helpers UI ----
+    function updateModeToggleUI() {
+      const setAttrs = (el) => {
+        el.setAttribute('aria-pressed', String(isOfflineMode));
+        el.classList.toggle('is-offline', isOfflineMode);
+        el.setAttribute(
+          'aria-label',
+          isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline'
+        );
+      };
+      if (modeToggleButton) setAttrs(modeToggleButton);
+      if (modeToggleButtons && modeToggleButtons.length) {
+        modeToggleButtons.forEach(setAttrs);
+      }
+      if (modeToggleStatus) {
+        modeToggleStatus.textContent = isOfflineMode ? 'Modo offline' : 'Modo en línea';
+      }
+      if (modeToggleHint) {
+        modeToggleHint.textContent = isOfflineMode ? 'Cambiar a modo en línea' : 'Cambiar a modo offline';
+      }
+      if (modeToggleLabel) {
+        modeToggleLabel.textContent = isOfflineMode ? 'Offline' : 'En línea';
+      }
     }
 
     function setOnlineFormDisabled(disabled) {
@@ -287,11 +314,6 @@
           forcedOfflineByError = false;
           setConverterMode(false);
         }
-
-        if (forcedOfflineByError) {
-          forcedOfflineByError = false;
-          setConverterMode(false);
-        }
       } catch (error) {
         console.error('Error cargando tasas', error);
         ratesData = null;
@@ -303,6 +325,7 @@
         showOnlineStatus(error.message || 'La API de conversión no está disponible en este momento.');
         setOnlineFormDisabled(true);
         forcedOfflineByError = true;
+        setConverterMode(true); // caemos a offline
       }
     }
 
@@ -519,6 +542,7 @@
       saveSelects();
     }
 
+    // ---- Listeners de toggle ----
     if (modeToggleButton) {
       modeToggleButton.addEventListener('click', () => {
         forcedOfflineByError = false;
